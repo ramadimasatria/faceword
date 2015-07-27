@@ -17,8 +17,7 @@ var FaceWord = (function () {
 
       var imageProcessor = FaceWord.ImageProcessor.init(img, ctx);
       var matrix         = imageProcessor.getMatrix();
-
-      FaceWord.Debug.printMatrix(matrix.data, '#matrix');
+      var blockManager   = FaceWord.BlockManager.init(matrix);
     }
   };
 })();

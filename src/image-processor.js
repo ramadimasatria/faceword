@@ -1,7 +1,7 @@
 FaceWord.ImageProcessor = (function (FaceWord) {
   var img       = {},
       matrix    = {},
-      blockSize = 10,
+      blockSize = 50,
       ctx,
       imageData;
 
@@ -124,7 +124,7 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     img: img,
     init: function (image, context) {
       img.el = image;
-      ctx = context;
+      ctx    = context;
 
       prepareImage();
       processImage();
