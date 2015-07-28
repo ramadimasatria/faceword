@@ -15,9 +15,15 @@ var FaceWord = (function () {
     run: function (img, canvas) {
       setCanvasContext(canvas);
 
-      var imageProcessor = FaceWord.ImageProcessor.init(img, ctx);
-      var matrix         = imageProcessor.getMatrix();
-      var blockManager   = FaceWord.BlockManager.init(matrix);
+      var imageProcessor = FaceWord.ImageProcessor,
+          blockManager   = FaceWord.BlockManager,
+          matrix,
+          blocks;
+
+      matrix = imageProcessor.generateMatrix(img, ctx);
+      blocks = blockManager.generateBlocks(matrix);
+
+      console.log(blocks);
     }
   };
 })();
