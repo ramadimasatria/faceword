@@ -1,6 +1,7 @@
 FaceWord.BlockManager = (function (FaceWord) {
   var matrix = {},
-      blocks = [];
+      blocks = [],
+      valueMap;
 
   var weighMatrix = function (observedValue) {
     var data           = matrix.data,
@@ -62,13 +63,11 @@ FaceWord.BlockManager = (function (FaceWord) {
 
   var generateBlocks = function (observedValue) {
     var weightedMatrix = weighMatrix(observedValue);
-
-    FaceWord.Debug.printMatrix(weightedMatrix.matrix, '#weighted');
     
     weightedMatrix.weights.sort(compareWeight); // Sort by weight
     for (var i = 0; i < weightedMatrix.weights.length; i++) {
       var cell = weightedMatrix.weights[i];
-      var block = getBlock(weightedMatrix.matrix, cell);
+      var block = getBlock(weightedMatrix.matrix, cell, observedValue);
 
       if (!examineBlock(weightedMatrix.matrix, block) && i > 0) {
         // Block is not valid, re-weigh the matrix and compute again
@@ -80,7 +79,7 @@ FaceWord.BlockManager = (function (FaceWord) {
     }
   };
 
-  var getBlock = function (matrix, cell) {
+  var getBlock = function (matrix, cell, observedValue) {
     var block = {},
         x     = cell.x,
         y     = cell.y,
@@ -109,10 +108,12 @@ FaceWord.BlockManager = (function (FaceWord) {
     }
 
     block = {
-      x: x,
-      y: y,
-      width: width,
+      x:      x,
+      y:      y,
+      width:  width,
       height: height,
+      value:  observedValue,
+      color:  valueMap[observedValue]
     };
 
     normalize(matrix, block);
@@ -150,11 +151,12 @@ FaceWord.BlockManager = (function (FaceWord) {
   return {
     generateBlocks: function (mtx) {
       matrix = mtx;
+      valueMap = mtx.valueMap;
 
-      if (matrix.valueMap.length < 2)
+      if (valueMap.length < 2)
         console.log('Require 2 color or more..');
 
-      for (var i = 1; i < matrix.valueMap.length; i++) {
+      for (var i = 1; i < valueMap.length; i++) {
         // Start generating block from value 1 (0 is for background)
         generateBlocks(i);
       }

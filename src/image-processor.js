@@ -1,7 +1,8 @@
 FaceWord.ImageProcessor = (function (FaceWord) {
-  var img       = {},
+  var settings  = FaceWord.settings,
+      img       = {},
       matrix    = {},
-      blockSize = 20,
+      blockSize = settings.blockSize,
       ctx,
       imageData;
 
@@ -19,7 +20,7 @@ FaceWord.ImageProcessor = (function (FaceWord) {
   var processImage = function () {
     var data = imageData.data;
     var r, g, b, value;
-    var contrastRatio = 30,
+    var contrastRatio = settings.contrast,
         contrastFactor = (259 * (contrastRatio + 255)) / (255 * (259 - contrastRatio));
 
     for (var i = 0; i < data.length; i+=4) {
@@ -36,6 +37,8 @@ FaceWord.ImageProcessor = (function (FaceWord) {
       data[i+1] = value;
       data[i+2] = value;
     }
+
+    FaceWord.Debug.drawImageData(imageData, '#imageData');
   };
 
   var pixelate = function () {
@@ -64,6 +67,8 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     }
 
     img.pixelated = pixelated;
+
+    FaceWord.Debug.drawPixelatedImage(pixelated, blockSize, '#pixelated');
   };
 
   var truncateValue = function (val) {
@@ -91,8 +96,8 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     }
     value = Math.floor(sum/count);
 
-    // return value;
-    return posterizePixel(value, 120);
+    return value;
+    // return posterizePixel(value, 200);
   };
 
   var encodeMatrix = function  () {
@@ -118,6 +123,8 @@ FaceWord.ImageProcessor = (function (FaceWord) {
       valueMap:  valueMap,
       blockSize: blockSize,
     };
+
+    FaceWord.Debug.printMatrix(matrix.data, '#matrix');
   };
 
   return {
