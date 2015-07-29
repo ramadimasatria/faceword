@@ -14,7 +14,7 @@ FaceWord.BlockManager = (function (FaceWord) {
 
     var value, weight, x, y, cell;
 
-    // weight row from right to left
+    // weight column from right to left
     for (y = 0; y < rows; y++) {
         weight = 0;
         weightedMatrix.matrix[y] = [];
@@ -32,7 +32,7 @@ FaceWord.BlockManager = (function (FaceWord) {
         }
     }
 
-    // weight column from bottom to top
+    // weight row from bottom to top
     for (x = 0; x < columns; x++) {
         weight = 0;
         for (y = rows-1; y >= 0; y--) {
@@ -46,33 +46,24 @@ FaceWord.BlockManager = (function (FaceWord) {
             }
 
             cell[1] = weight;
-
-            if (cell[0] !== 0 && cell[1] !== 0 ) {
-              weightedMatrix.weights.push({
-                x:x,
-                y:y,
-                rowWeight: cell[1],
-                colWeight: cell[0],
-              });
-            }
         }
     }
 
     return weightedMatrix;
   };
 
-  var generateBlocks = function (observedValue) {
-    var weightedMatrix = weighMatrix(observedValue),
-        cell, block;
+  var generateBlocks = function (observedValue, weightedMatrix) {
+    var cell, block;
+    
+    weightedMatrix = weightedMatrix ? weightedMatrix : weighMatrix(observedValue);
 
-    if (weightedMatrix.weights.length === 0) return;
+    cell = getMaxWeight(weightedMatrix.matrix);
+    if (!cell) return;
 
-    weightedMatrix.weights.sort(compareWeight); // Sort by weight
-    cell = weightedMatrix.weights[0];
     block = getBlock(weightedMatrix.matrix, cell, observedValue);
     blocks.push(block);
 
-    generateBlocks(observedValue);
+    generateBlocks(observedValue, weightedMatrix);
   };
 
   var getBlock = function (matrix, cell, observedValue) {
@@ -110,18 +101,54 @@ FaceWord.BlockManager = (function (FaceWord) {
       color:  valueMap[observedValue]
     };
 
-    normalize(matrix, block);
+    normalize(matrix, block, observedValue);
 
     return block;
   };
 
-  var normalize = function (weightedMatrix, block) {
-    for (var y = block.y; y < block.y+block.height; y++) {
-      for (var x = block.x; x < block.x+block.width; x++) {
+  var normalize = function (weightedMatrix, block, observedValue) {
+    var x, y, weight;
+
+    for (y = block.y; y < block.y+block.height; y++) {
+      for (x = block.x; x < block.x+block.width; x++) {
         weightedMatrix[y][x] = [0, 0];
         matrix.data[y][x]    = 'X';
       }
     }
+
+    // Reweight column
+    for (y = block.y; y < block.height + block.y; y++) {
+        weight = 0;
+        for (x = block.x-1; x >= 0; x--) {
+            value = matrix.data[y][x];
+
+            if (value === observedValue) {
+              weight++;
+            } else {
+              break;
+            }
+
+            weightedMatrix[y][x][0] = weight;
+        }
+    }
+
+    // Reweight row
+    for (x = block.x; x < block.width + block.x; x++) {
+        weight = 0;
+        for (y = block.y-1; y >= 0; y--) {
+            value = matrix.data[y][x];
+
+            if (value === observedValue) {
+              weight++;
+            } else {
+              break;
+            }
+
+            weightedMatrix[y][x][1] = weight;
+        }
+    }
+
+    // FaceWord.Debug.printMatrix(weightedMatrix, '#weighted');
   };
 
   var compareWeight = function (a, b) {
@@ -129,6 +156,31 @@ FaceWord.BlockManager = (function (FaceWord) {
     val1 = a.colWeight * a.rowWeight;
     val2 = b.colWeight * b.rowWeight;
     return val2 - val1;
+  };
+
+  var getMaxWeight = function (matrix) {
+    var maxWeight = 0,
+        cell = {},
+        weight;
+
+    for (var y = 0; y < matrix.length; y++) {
+      for (var x = 0; x < matrix[y].length; x++) {
+        weight = matrix[y][x][0] * matrix[y][x][1];
+        if (weight > maxWeight) {
+          maxWeight = weight;
+          cell = {
+            x: x,
+            y: y,
+            colWeight: matrix[y][x][0],
+            rowWeight: matrix[y][x][1],
+          };
+        }
+      }
+    }
+
+    if (maxWeight === 0) return false;
+
+    return cell;
   };
 
   return {
