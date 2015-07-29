@@ -1,23 +1,29 @@
 FaceWord.WordManager = (function (FaceWord) {
   var wordPool;
 
-  var generateWordPool = function (text) {
-    wordPool = text.match(/[A-z]+/g);
-  };
+  function init (text) {
+    _generateWordPool(text);
+  }
 
-  var getRandomWord = function () {
+  function getWord () {
     var word = wordPool[Math.floor(Math.random()*wordPool.length)];
 
     if (word.length >= 4 && word.length <=6)
         return word.toUpperCase();
-    
-    return getRandomWord();
-  };
+
+    return getWord();
+  }
+
+  /////////////////
+
+  function _generateWordPool (text) {
+    wordPool = text.match(/[A-z]+/g);
+  }
+
+  /////////////////
 
   return {
-    init: function (text) {
-      generateWordPool(text);
-    },
-    getRandomWord: getRandomWord
+    init: init,
+    getWord: getWord
   };
 })(FaceWord || {});

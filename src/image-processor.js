@@ -1,27 +1,24 @@
 FaceWord.ImageProcessor = (function (FaceWord) {
-  var settings  = FaceWord.settings,
-      img       = {},
-      matrix    = {},
-      blockSize = settings.blockSize,
+  var image,
       ctx,
-      imageData;
+      settings;
 
-  // Resize image and draw in canvas
-  var prepareImage = function () {
-    img.width  = img.el.width;
-    img.height = img.el.height;
-    img.blocks = [];
+  function init () {
+    image    = {};
+    ctx      = FaceWord.getCanvasContext();
+    settings = FaceWord.getSettings();
+  }
 
-    ctx.drawImage(img.el, 0, 0, img.width, img.height);
-
-    imageData = ctx.getImageData(0, 0, img.width, img.height);
-  };
-
-  var processImage = function () {
-    var data = imageData.data;
-    var r, g, b, value;
+  function process (img) {
     var contrastRatio = settings.contrast,
-        contrastFactor = (259 * (contrastRatio + 255)) / (255 * (259 - contrastRatio));
+        contrastFactor = (259 * (contrastRatio + 255)) / (255 * (259 - contrastRatio)),
+        imageData,
+        data, r, g, b, value;
+
+    _prepareImage(img);
+
+    imageData = ctx.getImageData(0, 0, image.width, image.height);
+    data = imageData.data;
 
     for (var i = 0; i < data.length; i+=4) {
       r = data[i];
@@ -29,7 +26,7 @@ FaceWord.ImageProcessor = (function (FaceWord) {
       b = data[i+2];
 
       value = (r + g + b) / 3;                                    // convert to grayscale
-      value = truncateValue((contrastFactor*(value-128))+128);    // add contrast
+      value = _truncateValue((contrastFactor*(value-128))+128);    // add contrast
       value = value > 120 ? 255 : 0;                              // posterize
 
       // change original image
@@ -38,70 +35,11 @@ FaceWord.ImageProcessor = (function (FaceWord) {
       data[i+2] = value;
     }
 
-    FaceWord.Debug.drawImageData(imageData, '#imageData');
-  };
+    return imageData;
+  }
 
-  var pixelate = function () {
-    var data  = imageData.data,
-        pixelated = [],
-        x0, y0, x1, y2,
-        row, column,
-        value;
-
-    for (y0 = 0; y0 < img.height; y0+=blockSize) {
-      row            = y0 / blockSize;
-      pixelated[row] = [];
-      y1             = y0 + blockSize - 1;
-      if (y1 > img.height)
-        y1 = img.height -1;
-
-      for (x0 = 0; x0 < img.width; x0+=blockSize) {
-        column = x0 / blockSize;
-        x1     = x0 + blockSize - 1;
-        if (x1 > img.width)
-          x1 = img.width -1;
-
-        value = getPixelatedValue(data, x0, y0, x1, y1);
-        pixelated[row][column] = value;
-      }
-    }
-
-    img.pixelated = pixelated;
-
-    FaceWord.Debug.drawPixelatedImage(pixelated, blockSize, '#pixelated');
-  };
-
-  var truncateValue = function (val) {
-    if (val < 0) return 0;
-    if (val > 255) return 255;
-    return val;
-  };
-
-  var posterizePixel = function (value, treshold) {
-    return value > treshold ? 255 : 0;
-  };
-
-  var getPixelatedValue = function (data, x0, y0, x1, y1) {
-    var sum = 0,
-        count = 0,
-        brightness,
-        value;
-
-    for (var j = y0; j < y1; j++) {
-      for (var i = x0; i < x1; i++) {
-        brightness = data[((img.width * j) + i) * 4];
-        sum += brightness;
-        count++;
-      }
-    }
-    value = Math.floor(sum/count);
-
-    // return value;
-    return posterizePixel(value, 200);
-  };
-
-  var encodeMatrix = function  () {
-    var pixelated = img.pixelated,
+  function encode (imageData) {
+    var pixelated = _pixelate(imageData),
         valueMap = [],
         data     = [];
 
@@ -121,24 +59,82 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     matrix = {
       data:      data,
       valueMap:  valueMap,
-      blockSize: blockSize,
     };
 
-    // FaceWord.Debug.printMatrix(matrix.data, '#matrix');
-  };
+    FaceWord.Debug.drawPixelatedImage(pixelated, settings.blockSize, '#pixelated');
+
+    return matrix;
+  }
+
+  /////////////////
+
+  function _prepareImage (img) {
+    image.el = img;
+    image.width  = img.width;
+    image.height = img.height;
+
+    ctx.drawImage(image.el, 0, 0, image.width, image.height);
+  }
+
+  function _pixelate (imageData) {
+    var data  = imageData.data,
+        pixelated = [],
+        blockSize = settings.blockSize,
+        x0, y0, x1, y2,
+        row, column,
+        value;
+
+    for (y0 = 0; y0 < image.height; y0+=blockSize) {
+      row            = y0 / blockSize;
+      pixelated[row] = [];
+      y1             = y0 + blockSize - 1;
+      if (y1 > image.height)
+        y1 = image.height -1;
+
+      for (x0 = 0; x0 < image.width; x0+=blockSize) {
+        column = x0 / blockSize;
+        x1     = x0 + blockSize - 1;
+        if (x1 > image.width)
+          x1 = image.width -1;
+
+        value = _getPixelatedValue(data, x0, y0, x1, y1);
+        pixelated[row][column] = value;
+      }
+    }
+
+    return pixelated;
+  }
+
+  function _getPixelatedValue (data, x0, y0, x1, y1) {
+    var sum = 0,
+        count = 0,
+        brightness,
+        value;
+
+    for (var j = y0; j < y1; j++) {
+      for (var i = x0; i < x1; i++) {
+        brightness = data[((image.width * j) + i) * 4];
+        sum += brightness;
+        count++;
+      }
+    }
+    value = Math.floor(sum/count);
+
+    // return value;
+    return value > 200 ? 255 : 0;
+  }
+
+  function _truncateValue (val) {
+    if (val < 0) return 0;
+    if (val > 255) return 255;
+    return val;
+  }
+
+  /////////////////
 
   return {
-    img: img,
-    generateMatrix: function (image, context) {
-      img.el = image;
-      ctx    = context;
-
-      prepareImage();
-      processImage();
-      pixelate();
-      encodeMatrix();
-
-      return matrix;
-    }
+    init:    init,
+    process: process,
+    encode:  encode
   };
 })(FaceWord || {});

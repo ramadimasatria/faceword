@@ -1,56 +1,74 @@
-var FaceWord = (function () {
-  var iter = 1;
-
+FaceWord = (function () {
   var settings = {
     contrast:    -10,
     blockSize:   5,
     minFontSize: 2,
-    maxFontSize: 16,
     minHeight:   5,
     minWidth:    5,
   };
 
-  var canvasEl,
-      ctx,
-      matrix,
-      imageProcessor,
-      blockManager,
-      wordManager;
+  var image,
+      text,
+      canvas,
+      ctx;
 
-  function setCanvasContext (canvas) {
-    canvasEl = document.querySelector(canvas);
-    ctx = canvasEl.getContext('2d');
+  function init (img, txt, cnv) {
+    image  = img;
+    text   = txt;
+    setCanvasContext(cnv);
+
+    FaceWord.ImageProcessor.init();
+    FaceWord.BlockManager.init();
+    FaceWord.WordManager.init(text);
   }
 
-  function render (blocks) {
-    ctx.clearRect(0, 0, canvasEl.width, canvas.height);
-    for (var i = 0; i < blocks.length; i++) {
-      var block = restoreBlockSize(blocks[i]);
+  function setCanvasContext (selector) {
+    canvas = document.querySelector(selector);
+    ctx = canvas.getContext('2d');
+  }
 
-      renderText(block);
+  function getCanvasContext () {
+    return ctx;
+  }
+
+  function clearCanvas () {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function getSettings () {
+    return settings;
+  }
+
+  function run () {
+    var imageData = FaceWord.ImageProcessor.process(image);
+    var matrix    = FaceWord.ImageProcessor.encode(imageData),
+        weightedMatrix,
+        block,
+        blockImageData,
+        blockMatrix;
+
+    clearCanvas();
+    for (var i = 1; i < matrix.valueMap.length; i++) {
+      weightedMatrix = FaceWord.BlockManager.weighMatrix(matrix.data, i);
+
+      block = FaceWord.BlockManager.getBlock(weightedMatrix);
+      block = _restoreBlockSize(block);
+
+      _renderBlock(block);
     }
+
   }
 
-  function restoreBlockSize (block) {
-    var blockSize = settings.blockSize;
-    return {
-      x:      block.x * blockSize,
-      y:      block.y * blockSize,
-      width:  block.width * blockSize,
-      height: block.height * blockSize,
-      color:  block.color
-    };
-  }
+  //////////////////
 
-  function renderText (block) {
-    var word = wordManager.getRandomWord(),
-        x = block.x,
-        y = block.y,
-        width = block.width,
-        height = block.height,
-        fontMeasure = measureFont(word, ctx, width, height),
-        fontSize,
-        fontOffset;
+  function _renderBlock (block) {
+    var word        = FaceWord.WordManager.getWord(),
+        x           = block.x,
+        y           = block.y,
+        width       = block.width,
+        height      = block.height,
+        fontMeasure = _measureFont(word, width, height),
+        fontSize;
 
     if (!fontMeasure) return;
 
@@ -61,52 +79,53 @@ var FaceWord = (function () {
     ctx.font = fontSize + 'px serif';
     ctx.fillText(word, x, y+fontHeight, width);
 
-    // Return optimal font size
-    function measureFont (word, ctx, maxWidth, maxHeight) {
-        var size = settings.minFontSize,
-            wDiff,
-            textWidth,
-            maxTextWidth;
-
-
-        ctx.font = size + 'px serif';
-        textWidth = ctx.measureText(word).width;
-        wDiff = maxWidth - textWidth;
-
-        if (wDiff < 0) {
-            return false;
-        }
-
-        while(wDiff > 0 && size < maxHeight){
-          maxTextWidth = textWidth;
-
-          size += 1;
-          ctx.font = size + 'px serif';
-          textWidth = ctx.measureText(word).width;
-          wDiff = maxWidth - textWidth;
-        }
-        return [size - 1, maxTextWidth];
-    }
+    block.renderedWidth  = Math.ceil(fontWidth);
+    block.renderedHeight = Math.ceil(fontHeight);
   }
 
-  return {
-    settings: settings,
-    run: function (img, text, canvas) {
-      var matrix, blocks;
+  function _restoreBlockSize (block) {
+    var blockSize = settings.blockSize;
+    return {
+      x:      block.x * blockSize,
+      y:      block.y * blockSize,
+      width:  block.width * blockSize,
+      height: block.height * blockSize,
+    };
+  }
 
-      setCanvasContext(canvas);
+  function _measureFont (word, maxWidth, maxHeight) {
+    var size = settings.minFontSize,
+        wDiff,
+        textWidth,
+        maxTextWidth;
 
-      imageProcessor = FaceWord.ImageProcessor;
-      blockManager   = FaceWord.BlockManager;
-      wordManager    = FaceWord.WordManager;
-      wordManager.init(text);
+    ctx.font  = size + 'px serif';
+    textWidth = ctx.measureText(word).width;
+    wDiff     = maxWidth - textWidth;
 
-      matrix = imageProcessor.generateMatrix(img, ctx);
-      blocks = blockManager.generateBlocks(matrix);
-
-      render(blocks);
-
-      FaceWord.Debug.drawBlocks(blocks, settings.blockSize, '#blocks', true);
+    if (wDiff < 0) {
+        return false;
     }
+
+    while(wDiff > 0 && size < maxHeight){
+      maxTextWidth = textWidth;
+
+      size += 1;
+      ctx.font = size + 'px serif';
+      textWidth = ctx.measureText(word).width;
+      wDiff = maxWidth - textWidth;
+    }
+    return [size - 1, maxTextWidth];
+  }
+
+  //////////////////
+
+  return {
+    init:             init,
+    setCanvasContext: setCanvasContext,
+    getCanvasContext: getCanvasContext,
+    clearCanvas:      clearCanvas,
+    getSettings:      getSettings,
+    run:              run,
   };
 })();

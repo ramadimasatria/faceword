@@ -1,26 +1,21 @@
 FaceWord.BlockManager = (function (FaceWord) {
-  var matrix = {},
-      blocks = [],
-      valueMap;
+  function init () {
+  }
 
-  var weighMatrix = function (observedValue) {
-    var data           = matrix.data,
-        rows           = data.length,
-        columns        = data[0].length,
-        weightedMatrix = {
-          matrix: [],
-          weights: []
-        };
+  function weighMatrix (matrix, observedValue) {
+    var rows           = matrix.length,
+        columns        = matrix[0].length,
+        weightedMatrix = [];
 
     var value, weight, x, y, cell;
 
     // weight column from right to left
     for (y = 0; y < rows; y++) {
         weight = 0;
-        weightedMatrix.matrix[y] = [];
+        weightedMatrix[y] = [];
 
         for (x = columns-1; x >= 0; x--) {
-            value = data[y][x];
+            value = matrix[y][x];
 
             if (value === observedValue) {
               weight++;
@@ -28,7 +23,7 @@ FaceWord.BlockManager = (function (FaceWord) {
               weight = 0;
             }
 
-            weightedMatrix.matrix[y][x] = [weight];
+            weightedMatrix[y][x] = [weight];
         }
     }
 
@@ -36,8 +31,7 @@ FaceWord.BlockManager = (function (FaceWord) {
     for (x = 0; x < columns; x++) {
         weight = 0;
         for (y = rows-1; y >= 0; y--) {
-            value = data[y][x];
-            cell  = weightedMatrix.matrix[y][x];
+            value = matrix[y][x];
 
             if (value === observedValue) {
               weight++;
@@ -45,39 +39,29 @@ FaceWord.BlockManager = (function (FaceWord) {
               weight = 0;
             }
 
-            cell[1] = weight;
+            weightedMatrix[y][x][1] = weight;
         }
     }
 
     return weightedMatrix;
-  };
+  }
 
-  var generateBlocks = function (observedValue, weightedMatrix) {
-    var cell, block;
-    
-    weightedMatrix = weightedMatrix ? weightedMatrix : weighMatrix(observedValue);
-
-    cell = getMaxWeight(weightedMatrix.matrix);
-    if (!cell) return;
-
-    block = getBlock(weightedMatrix.matrix, cell, observedValue);
-    blocks.push(block);
-
-    generateBlocks(observedValue, weightedMatrix);
-  };
-
-  var getBlock = function (matrix, cell, observedValue) {
-    var block   = {},
-        x       = cell.x,
-        y       = cell.y,
+  function getBlock (weightedMatrix) {
+    var cell = _getMaxWeightedCell(weightedMatrix),
+        block   = {},
+        x, y,
         maxArea, maxHeight,
-        prevWidth, width, height, i;
+        prevWidth, width, height;
 
-    maxArea = 0;
-    maxHeight = Math.min(cell.rowWeight, Math.ceil(0.3*cell.colWeight));
-    prevWidth = cell.colWeight;
+    if (!cell) return false;
+
+    x            = cell.x;
+    y            = cell.y;
+    maxArea      = 0;
+    maxHeight    = Math.min(cell.rowWeight, Math.ceil(0.3*cell.colWeight));
+    prevWidth    = cell.colWeight;
     for (var row = 0; row < maxHeight; row++) {
-      var observedCell = matrix[y+row][x],
+      var observedCell = weightedMatrix[y+row][x],
           observedArea;
 
       width = Math.min(prevWidth, observedCell[0]);
@@ -98,75 +82,28 @@ FaceWord.BlockManager = (function (FaceWord) {
       y:      y,
       width:  width,
       height: height,
-      value:  observedValue,
-      color:  valueMap[observedValue]
     };
 
-    normalize(matrix, block, observedValue);
-
     return block;
-  };
+  }
 
-  var normalize = function (weightedMatrix, block, observedValue) {
-    var x, y, weight;
+  //////////////////////
 
-    for (y = block.y; y < block.y+block.height; y++) {
-      for (x = block.x; x < block.x+block.width; x++) {
-        weightedMatrix[y][x] = [0, 0];
-        matrix.data[y][x]    = 'X';
-      }
-    }
-
-    // Reweight column
-    for (y = block.y; y < block.height + block.y; y++) {
-        weight = 0;
-        for (x = block.x-1; x >= 0; x--) {
-            value = matrix.data[y][x];
-
-            if (value === observedValue) {
-              weight++;
-            } else {
-              break;
-            }
-
-            weightedMatrix[y][x][0] = weight;
-        }
-    }
-
-    // Reweight row
-    for (x = block.x; x < block.width + block.x; x++) {
-        weight = 0;
-        for (y = block.y-1; y >= 0; y--) {
-            value = matrix.data[y][x];
-
-            if (value === observedValue) {
-              weight++;
-            } else {
-              break;
-            }
-
-            weightedMatrix[y][x][1] = weight;
-        }
-    }
-
-    // FaceWord.Debug.printMatrix(weightedMatrix, '#weighted');
-  };
-
-  var getMaxWeight = function (matrix) {
+  function _getMaxWeightedCell (weightedMatrix) {
     var maxWeight = 0,
         cell = {},
         weight;
 
-    for (var y = 0; y < matrix.length; y++) {
-      for (var x = 0; x < matrix[y].length; x++) {
-        weight = matrix[y][x][0] * matrix[y][x][1];
+    for (var y = 0; y < weightedMatrix.length; y++) {
+      for (var x = 0; x < weightedMatrix[y].length; x++) {
+        weight = weightedMatrix[y][x][0] * weightedMatrix[y][x][1];
         if (weight > maxWeight) {
           maxWeight = weight;
           cell = {
             x: x,
             y: y,
-            colWeight: matrix[y][x][0],
-            rowWeight: matrix[y][x][1],
+            colWeight: weightedMatrix[y][x][0],
+            rowWeight: weightedMatrix[y][x][1],
           };
         }
       }
@@ -175,22 +112,12 @@ FaceWord.BlockManager = (function (FaceWord) {
     if (maxWeight === 0) return false;
 
     return cell;
-  };
+  }
+  //////////////////////
 
   return {
-    generateBlocks: function (mtx) {
-      matrix = mtx;
-      valueMap = mtx.valueMap;
-
-      if (valueMap.length < 2)
-        console.log('Require 2 color or more..');
-
-      for (var i = 1; i < valueMap.length; i++) {
-        // Start generating block from value 1 (0 is for background)
-        generateBlocks(i);
-      }
-
-      return blocks;
-    }
+    init:        init,
+    weighMatrix: weighMatrix,
+    getBlock:    getBlock
   };
 })(FaceWord || {});

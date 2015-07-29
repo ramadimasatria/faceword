@@ -1,4 +1,4 @@
-FaceWord.Debug = (function (FaceWord) {
+FaceWord.Debug = (function (FW) {
   return {
     printMatrix: function (data, container) {
       var el = document.querySelector(container),
@@ -35,7 +35,7 @@ FaceWord.Debug = (function (FaceWord) {
             width: blockSize,
             height: blockSize
           };
-  
+
           ctx.fillStyle = 'rgb('+value+','+value+','+value+')';
           ctx.fillRect(block.x, block.y, block.width, block.height);
         }
@@ -44,7 +44,7 @@ FaceWord.Debug = (function (FaceWord) {
 
     drawBlocks: function (blocks, blockSize, selector, randomColor) {
       var ctx = document.querySelector(selector).getContext('2d');
-      
+
       for (var i = 0; i < blocks.length; i++) {
         var block = {
           x:      blocks[i].x * blockSize,

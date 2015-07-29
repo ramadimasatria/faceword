@@ -27,7 +27,9 @@
 			var img = document.getElementById('image'),
           text = 'apple ipod iphone ipad steve jobs mac macbook imac innovation technology ios keynote';
 
-      FaceWord.run(img, text, '#canvas');
+      var faceword = FaceWord;
+      faceword.init(img, text, '#canvas');
+      faceword.run();
 		}
 	</script>
 </body>
