@@ -8,8 +8,8 @@ FaceWord.WordManager = (function (FaceWord) {
   var getRandomWord = function () {
     var word = wordPool[Math.floor(Math.random()*wordPool.length)];
 
-    if (word.length >= 3)
-        return word.toLowerCase();
+    if (word.length >= 4 && word.length <=6)
+        return word.toUpperCase();
     
     return getRandomWord();
   };

@@ -70,12 +70,13 @@ FaceWord.BlockManager = (function (FaceWord) {
     var block   = {},
         x       = cell.x,
         y       = cell.y,
-        maxArea, prevWidth, width, height, i,
-        adjacentCell;
+        maxArea, maxHeight,
+        prevWidth, width, height, i;
 
     maxArea = 0;
+    maxHeight = Math.min(cell.rowWeight, Math.ceil(0.3*cell.colWeight));
     prevWidth = cell.colWeight;
-    for (var row = 0; row < cell.rowWeight; row++) {
+    for (var row = 0; row < maxHeight; row++) {
       var observedCell = matrix[y+row][x],
           observedArea;
 
@@ -149,13 +150,6 @@ FaceWord.BlockManager = (function (FaceWord) {
     }
 
     // FaceWord.Debug.printMatrix(weightedMatrix, '#weighted');
-  };
-
-  var compareWeight = function (a, b) {
-    var val1, val2;
-    val1 = a.colWeight * a.rowWeight;
-    val2 = b.colWeight * b.rowWeight;
-    return val2 - val1;
   };
 
   var getMaxWeight = function (matrix) {

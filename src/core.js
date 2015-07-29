@@ -1,7 +1,13 @@
 var FaceWord = (function () {
+  var iter = 1;
+
   var settings = {
-    contrast:  -10,
-    blockSize: 5
+    contrast:    -10,
+    blockSize:   5,
+    minFontSize: 2,
+    maxFontSize: 16,
+    minHeight:   5,
+    minWidth:    5,
   };
 
   var canvasEl,
@@ -21,7 +27,7 @@ var FaceWord = (function () {
     for (var i = 0; i < blocks.length; i++) {
       var block = restoreBlockSize(blocks[i]);
 
-      fillText(block);
+      renderText(block);
     }
   }
 
@@ -36,57 +42,50 @@ var FaceWord = (function () {
     };
   }
 
-  function fillText (block) {
+  function renderText (block) {
     var word = wordManager.getRandomWord(),
         x = block.x,
         y = block.y,
         width = block.width,
         height = block.height,
+        fontMeasure = measureFont(word, ctx, width, height),
         fontSize,
         fontOffset;
 
-    fontSize = measureFontSize(word, ctx, width, height);
-    fontHeight = fontSize * 0.7;
+    if (!fontMeasure) return;
+
+    fontSize = fontMeasure[0];
+    fontWidth = fontMeasure[1];
+    fontHeight = fontSize * 0.8;
 
     ctx.font = fontSize + 'px serif';
     ctx.fillText(word, x, y+fontHeight, width);
 
-    // Run the function again if there's an extra space
-    var extraHeight = height - fontHeight,
-        extraBlock;
-
-    if (extraHeight > 10) {
-        extraBlock = {
-            x:      block.x,
-            y:      block.y + fontHeight + 2, // add some extra pixel
-            width:  block.width,
-            height: extraHeight
-        };
-        fillText(extraBlock);
-    }
-
     // Return optimal font size
-    function measureFontSize (word, ctx, maxWidth, maxHeight) {
-        var size = 4,
+    function measureFont (word, ctx, maxWidth, maxHeight) {
+        var size = settings.minFontSize,
             wDiff,
-            textWidth;
+            textWidth,
+            maxTextWidth;
+
 
         ctx.font = size + 'px serif';
         textWidth = ctx.measureText(word).width;
         wDiff = maxWidth - textWidth;
 
         if (wDiff < 0) {
-            return size;
+            return false;
         }
 
-        while(wDiff > 0){
-            size += 2;
-            ctx.font = size + 'px serif';
-            textWidth = ctx.measureText(word).width;
-            wDiff = maxWidth - textWidth;
-        }
+        while(wDiff > 0 && size < maxHeight){
+          maxTextWidth = textWidth;
 
-        return size - 2;
+          size += 1;
+          ctx.font = size + 'px serif';
+          textWidth = ctx.measureText(word).width;
+          wDiff = maxWidth - textWidth;
+        }
+        return [size - 1, maxTextWidth];
     }
   }
 

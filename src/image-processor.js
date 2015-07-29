@@ -124,7 +124,7 @@ FaceWord.ImageProcessor = (function (FaceWord) {
       blockSize: blockSize,
     };
 
-    FaceWord.Debug.printMatrix(matrix.data, '#matrix');
+    // FaceWord.Debug.printMatrix(matrix.data, '#matrix');
   };
 
   return {
