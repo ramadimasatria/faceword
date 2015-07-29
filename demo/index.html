@@ -5,29 +5,29 @@
 	<title>Document</title>
 </head>
 <body>
-  <img src="img/rectangle.jpg" id="image">
+  <img src="img/steve.jpg" id="image">
 	<button onclick="run()">Convert</button>
   <br>
   <canvas id="imageData" width=400 height=400></canvas>
   <canvas id="pixelated" width=400 height=400></canvas>
   <canvas id="blocks" width=400 height=400></canvas>
   <canvas id="canvas" width=400 height=400></canvas>
-  <div id="matrix"></div>
   <div id="weighted"></div>
-  <div id="normalized"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.0/lodash.min.js"></script>
 
   <script src="../src/core.js"></script>
   <script src="../src/image-processor.js"></script>
   <script src="../src/block-manager.js"></script>
+  <script src="../src/word-manager.js"></script>
   <script src="../src/debug.js"></script>
 
 	<script>
 		function run () {
-			var img = document.getElementById('image');
+			var img = document.getElementById('image'),
+          text = 'Here’s to the crazy ones. The misfits. The rebels. The troublemakers. The round pegs in the square holes. The ones who see things differently. They’re not fond of rules. And they have no respect for the status quo. You can quote them, disagree with them, glorify or vilify them. About the only thing you can’t do is ignore them. Because they change things. They invent. They imagine. They heal. They explore. They create. They inspire. They push the human race forward. Maybe they have to be crazy.How else can you stare at an empty canvas and see a work of art? Or sit in silence and hear a song that’s never been written? Or gaze at a red planet and see a laboratory on wheels? We make tools for these kinds of people. While some see them as the crazy ones, we see genius. Because the people who are crazy enough to think they can change the world, are the ones who do.';
 
-      FaceWord.run(img, '#canvas');
+      FaceWord.run(img, text, '#canvas');
 		}
 	</script>
 </body>
