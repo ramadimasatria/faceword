@@ -62,48 +62,42 @@ FaceWord.BlockManager = (function (FaceWord) {
   };
 
   var generateBlocks = function (observedValue) {
-    var weightedMatrix = weighMatrix(observedValue);
-    
-    weightedMatrix.weights.sort(compareWeight); // Sort by weight
-    for (var i = 0; i < weightedMatrix.weights.length; i++) {
-      var cell = weightedMatrix.weights[i];
-      var block = getBlock(weightedMatrix.matrix, cell, observedValue);
+    var weightedMatrix = weighMatrix(observedValue),
+        cell, block;
 
-      if (!examineBlock(weightedMatrix.matrix, block) && i > 0) {
-        // Block is not valid, re-weigh the matrix and compute again
-        generateBlocks(observedValue);
-        break;
-      } else {
-        blocks.push(block);
-      }
-    }
+    if (weightedMatrix.weights.length === 0) return;
+
+    weightedMatrix.weights.sort(compareWeight); // Sort by weight
+    cell = weightedMatrix.weights[0];
+    block = getBlock(weightedMatrix.matrix, cell, observedValue);
+    blocks.push(block);
+
+    generateBlocks(observedValue);
   };
 
   var getBlock = function (matrix, cell, observedValue) {
-    var block = {},
-        x     = cell.x,
-        y     = cell.y,
-        width, height, i,
+    var block   = {},
+        x       = cell.x,
+        y       = cell.y,
+        maxArea, prevWidth, width, height, i,
         adjacentCell;
 
-    // width is the same as column width
-    width = cell.colWeight;
+    maxArea = 0;
+    prevWidth = cell.colWeight;
+    for (var row = 0; row < cell.rowWeight; row++) {
+      var observedCell = matrix[y+row][x],
+          observedArea;
 
-    // find height
-    height = 1;
-    i = 1;
-    while(i>0 && i+y<cell.rowWeight){
-      try{
-        adjacentCell = matrix[y+i][x];
-      }catch(e){
-        i=0;
-      }
+      width = Math.min(prevWidth, observedCell[0]);
+      height = row+1;
+      observedArea = width * height;
 
-      if (adjacentCell && cell.colWeight <= adjacentCell[0]) {
-        height++;
-        i++;
+      if (observedArea >= maxArea) {
+        maxArea = observedArea;
+        prevWidth = width;
       } else {
-        i=0;
+        height = row;
+        break;
       }
     }
 
@@ -119,17 +113,6 @@ FaceWord.BlockManager = (function (FaceWord) {
     normalize(matrix, block);
 
     return block;
-  };
-
-  var examineBlock = function (matrix, block) {
-    for (var y = block.y; y < block.y+block.height; y++) {
-      for (var x = block.x; x < block.x+block.width; x++) {
-        if (matrix[x][y][0] === 0 || matrix[x][y][1] === 0)
-          return false;
-      }
-    }
-
-    return true;
   };
 
   var normalize = function (weightedMatrix, block) {

@@ -96,8 +96,8 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     }
     value = Math.floor(sum/count);
 
-    return value;
-    // return posterizePixel(value, 200);
+    // return value;
+    return posterizePixel(value, 200);
   };
 
   var encodeMatrix = function  () {

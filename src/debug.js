@@ -40,6 +40,31 @@ FaceWord.Debug = (function (FaceWord) {
           ctx.fillRect(block.x, block.y, block.width, block.height);
         }
       }
+    },
+
+    drawBlocks: function (blocks, blockSize, selector, randomColor) {
+      var ctx = document.querySelector(selector).getContext('2d');
+      
+      for (var i = 0; i < blocks.length; i++) {
+        var block = {
+          x:      blocks[i].x * blockSize,
+          y:      blocks[i].y * blockSize,
+          width:  blocks[i].width * blockSize,
+          height: blocks[i].height * blockSize,
+          color:  blocks[i].color
+        };
+
+        if (randomColor) {
+          ctx.fillStyle = "rgb("+
+            Math.floor(Math.random()*256)+","+
+            Math.floor(Math.random()*256)+","+
+            Math.floor(Math.random()*256)+")";
+        } else {
+          ctx.fillStyle = 'rgb('+block.color+','+block.color+','+block.color+')';
+        }
+
+        ctx.fillRect(block.x, block.y, block.width, block.height);
+      }
     }
   };
 })(FaceWord || {});

@@ -15,12 +15,8 @@ var FaceWord = (function () {
 
   function render (blocks) {
     ctx.clearRect(0, 0, canvasEl.width, canvas.height);
-    for (var i = 0; i < blocks.length; i++) {
-      var block = restoreBlockSize(blocks[i]);
 
-      ctx.fillStyle = 'rgb('+block.color+','+block.color+','+block.color+')';
-      ctx.fillRect(block.x, block.y, block.width, block.height);
-    }
+    FaceWord.Debug.drawBlocks(blocks, settings.blockSize, '#blocks', true);
   }
 
   function restoreBlockSize (block) {
