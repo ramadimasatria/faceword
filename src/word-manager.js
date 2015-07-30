@@ -18,7 +18,7 @@ FaceWord.WordManager = (function (FaceWord) {
     return word.toUpperCase();
   }
 
-  /////////////////
+  ///////////////// Private Functions
 
   function _generateWordPool (text) {
     var wordArray = text.match(/[A-z]+/g),

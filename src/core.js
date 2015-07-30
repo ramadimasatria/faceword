@@ -13,36 +13,58 @@ FaceWord = (function () {
       canvas,
       ctx;
 
-  function init (img, txt, cnv) {
-    image  = _validateImage(img);
+  /**
+   * Init function
+   * 
+   * @param  {element}  i   image element
+   * @param  {string}   t   text
+   * @param  {string}   c   canvas selector
+   * @param  {object}   s   settings object
+   */
+  function init (i, t, c, s) {
+    for(var prop in s) {
+      if(s.hasOwnProperty(prop)){
+        settings[prop] = s[prop];
+      }
+    }
 
-    setCanvasContext(cnv);
+    image  = _validateImage(i);
 
-    FaceWord.ImageProcessor.init(img);
+    _setCanvasContext(c);
+
+    FaceWord.ImageProcessor.init(image);
     FaceWord.BlockManager.init();
-    FaceWord.WordManager.init(txt);
+    FaceWord.WordManager.init(t);
   }
 
-  function setCanvasContext (selector) {
-    canvas        = document.querySelector(selector);
-    canvas.width  = image.width;
-    canvas.height = image.height;
-
-    ctx           = canvas.getContext('2d');
-  }
-
+  /**
+   * Getter function for canvas context
+   * 
+   * @return {CanvasRenderingContext2D}
+   */
   function getCanvasContext () {
     return ctx;
   }
 
+  /**
+   * Clear working canvas
+   */
   function clearCanvas () {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
+  /**
+   * Getter function for settings object
+   * 
+   * @return {object} settings object
+   */
   function getSettings () {
     return settings;
   }
 
+  /**
+   * Where the magic happens
+   */
   function run () {
     var imageData = FaceWord.ImageProcessor.process(image);
     var matrix    = FaceWord.ImageProcessor.encode(imageData),
@@ -71,7 +93,15 @@ FaceWord = (function () {
 
   }
 
-  //////////////////
+  ////////////////// Private Functions
+
+  function _setCanvasContext (selector) {
+    canvas        = document.querySelector(selector);
+    canvas.width  = image.width;
+    canvas.height = image.height;
+
+    ctx           = canvas.getContext('2d');
+  }
 
   function _validateImage (img) {
     img.width  = Math.min(img.width, settings.maxImageSize);
@@ -149,10 +179,10 @@ FaceWord = (function () {
 
   return {
     init:             init,
-    setCanvasContext: setCanvasContext,
     getCanvasContext: getCanvasContext,
     clearCanvas:      clearCanvas,
     getSettings:      getSettings,
     run:              run,
   };
+
 })();

@@ -137,7 +137,7 @@ FaceWord.BlockManager = (function (FaceWord) {
     }
   }
 
-  //////////////////////
+  ////////////////////// Private Functions
 
   function _getMaxWeightedCell (weightedMatrix) {
     var maxWeight = 0,

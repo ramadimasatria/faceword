@@ -64,7 +64,7 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     return matrix;
   }
 
-  /////////////////
+  ///////////////// Private Functions
 
   function _prepareImage (img) {
     image.el = img;
