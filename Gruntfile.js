@@ -67,6 +67,13 @@ module.exports = function(grunt) {
       lib_test: {
         src: ['src/**.js']
       }
+    },
+    bump: {
+      options: {
+        // commitFiles: ['package.json', 'dist/<%= pkg.name %>.js', 'dist/<%= pkg.name %>.js'],
+        push: false,
+        commit: false,
+      }
     }
   });
 
