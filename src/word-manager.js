@@ -23,7 +23,9 @@ FaceWord.WordManager = (function (FaceWord) {
   function _generateWordPool (text) {
     var wordArray = text.match(/[A-z]+/g),
         stopWords = [
-          "a", "able", "about", "across", "after", "all", "almost", "also", "am", "among", "an",
+          "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r",
+          "s", "t", "u", "v", "w", "x", "y", "z",
+          "able", "about", "across", "after", "all", "almost", "also", "am", "among", "an",
           "and", "any", "are", "as", "at", "be", "because", "been", "but", "by", "can", "cannot",
           "could", "dear", "did", "do", "does", "either", "else", "ever", "every", "for", "from",
           "get", "got", "had", "has", "have", "he", "her", "hers", "him", "his", "how", "however",
