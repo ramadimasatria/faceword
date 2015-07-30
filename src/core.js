@@ -1,11 +1,12 @@
 FaceWord = (function () {
   var settings = {
-    contrast:     -10,
-    blockSize:    5,
-    minFontSize:  2,
-    minHeight:    5,
-    minWidth:     5,
-    maxImageSize: 500,
+    contrast:      -10,
+    blockSize:     5,
+    minFontSize:   2,
+    minHeight:     5,
+    minWidth:      5,
+    maxImageSize:  600,
+    blockMinWidth: 3,
   };
 
   var image,
@@ -94,7 +95,7 @@ FaceWord = (function () {
 
     fontSize   = fontMeasure[0];
     fontWidth  = fontMeasure[1];
-    fontHeight = fontSize * 0.75;
+    fontHeight = Math.ceil(fontSize * 0.8);
 
     ctx.font = fontSize + 'px serif';
     ctx.fillText(word, x, y+fontHeight, width);

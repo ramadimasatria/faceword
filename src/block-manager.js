@@ -1,5 +1,8 @@
 FaceWord.BlockManager = (function (FaceWord) {
+  var settings;
+
   function init () {
+    settings = FaceWord.getSettings();
   }
 
   function weighMatrix (matrix, observedValue) {
@@ -58,9 +61,9 @@ FaceWord.BlockManager = (function (FaceWord) {
     x            = cell.x;
     y            = cell.y;
     maxArea      = 0;
-    maxHeight    = Math.min(cell.rowWeight, Math.ceil(0.3*cell.colWeight));
+    maxHeight    = Math.min(cell.rowWeight, Math.ceil(0.5*cell.colWeight));
     prevWidth    = cell.colWeight;
-    for (var row = 0; row < cell.rowWeight; row++) {
+    for (var row = 0; row < maxHeight; row++) {
       var observedCell = weightedMatrix[y+row][x],
           observedArea;
 
