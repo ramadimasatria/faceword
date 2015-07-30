@@ -60,7 +60,7 @@ FaceWord.BlockManager = (function (FaceWord) {
     maxArea      = 0;
     maxHeight    = Math.min(cell.rowWeight, Math.ceil(0.3*cell.colWeight));
     prevWidth    = cell.colWeight;
-    for (var row = 0; row < maxHeight; row++) {
+    for (var row = 0; row < cell.rowWeight; row++) {
       var observedCell = weightedMatrix[y+row][x],
           observedArea;
 
@@ -73,6 +73,7 @@ FaceWord.BlockManager = (function (FaceWord) {
         prevWidth = width;
       } else {
         height = row;
+        width = prevWidth;
         break;
       }
     }
@@ -85,6 +86,52 @@ FaceWord.BlockManager = (function (FaceWord) {
     };
 
     return block;
+  }
+
+  function normalize (weightedMatrix, block) {
+    if (!block.renderedWidth || !block.renderedHeight) return;
+
+    var height = block.renderedHeight,
+        width = block.renderedWidth,
+        x, y, cell, weight;
+
+    for (y = block.y; y < block.y+height; y++) {
+      for (x = block.x; x < block.x+width; x++) {
+        weightedMatrix[y][x] = [0, 0];
+      }
+    }
+
+    // Reweight column
+    for (y = block.y; y < height + block.y; y++) {
+        weight = 0;
+        for (x = block.x-1; x >= 0; x--) {
+            cell = weightedMatrix[y][x];
+
+            if (cell[0] === 0 && cell[1] === 0) {
+              break;
+            } else {
+              weight++;
+            }
+
+            cell[0] = weight;
+        }
+    }
+
+    // Reweight row
+    for (x = block.x; x < width + block.x; x++) {
+        weight = 0;
+        for (y = block.y-1; y >= 0; y--) {
+            cell = weightedMatrix[y][x];
+
+            if (cell[0] === 0 && cell[1] === 0) {
+              break;
+            } else {
+              weight++;
+            }
+
+            cell[1] = weight;
+        }
+    }
   }
 
   //////////////////////
@@ -118,6 +165,7 @@ FaceWord.BlockManager = (function (FaceWord) {
   return {
     init:        init,
     weighMatrix: weighMatrix,
-    getBlock:    getBlock
+    getBlock:    getBlock,
+    normalize:   normalize
   };
 })(FaceWord || {});

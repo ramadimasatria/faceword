@@ -61,8 +61,6 @@ FaceWord.ImageProcessor = (function (FaceWord) {
       valueMap:  valueMap,
     };
 
-    FaceWord.Debug.drawPixelatedImage(pixelated, settings.blockSize, '#pixelated');
-
     return matrix;
   }
 

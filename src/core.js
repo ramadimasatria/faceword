@@ -45,16 +45,24 @@ FaceWord = (function () {
         weightedMatrix,
         block,
         blockImageData,
-        blockMatrix;
+        blockMatrix,
+        blockExist;
 
     clearCanvas();
     for (var i = 1; i < matrix.valueMap.length; i++) {
       weightedMatrix = FaceWord.BlockManager.weighMatrix(matrix.data, i);
+      blockExist = true;
 
-      block = FaceWord.BlockManager.getBlock(weightedMatrix);
-      block = _restoreBlockSize(block);
+      while(blockExist){
+        block = FaceWord.BlockManager.getBlock(weightedMatrix);
 
-      _renderBlock(block);
+        if (block) {
+          _renderBlock(block);
+          FaceWord.BlockManager.normalize(weightedMatrix, block);
+        } else {
+          blockExist = false;
+        }
+      }
     }
 
   }
@@ -62,11 +70,13 @@ FaceWord = (function () {
   //////////////////
 
   function _renderBlock (block) {
+    var restoredBlock =  _restoreBlockSize(block);
+
     var word        = FaceWord.WordManager.getWord(),
-        x           = block.x,
-        y           = block.y,
-        width       = block.width,
-        height      = block.height,
+        x           = restoredBlock.x,
+        y           = restoredBlock.y,
+        width       = restoredBlock.width,
+        height      = restoredBlock.height,
         fontMeasure = _measureFont(word, width, height),
         fontSize;
 
@@ -79,8 +89,7 @@ FaceWord = (function () {
     ctx.font = fontSize + 'px serif';
     ctx.fillText(word, x, y+fontHeight, width);
 
-    block.renderedWidth  = Math.ceil(fontWidth);
-    block.renderedHeight = Math.ceil(fontHeight);
+    _assignRenderedSize(block, fontWidth, fontHeight);
   }
 
   function _restoreBlockSize (block) {
@@ -116,6 +125,13 @@ FaceWord = (function () {
       wDiff = maxWidth - textWidth;
     }
     return [size - 1, maxTextWidth];
+  }
+
+  function _assignRenderedSize (block, width, height) {
+    var blockSize = settings.blockSize;
+
+    block.renderedWidth  = Math.ceil(width / settings.blockSize);
+    block.renderedHeight = Math.ceil(height / settings.blockSize);
   }
 
   //////////////////
