@@ -41,7 +41,8 @@ FaceWord.ImageProcessor = (function (FaceWord) {
   function encode (imageData) {
     var pixelated = _pixelate(imageData),
         valueMap = [],
-        data     = [];
+        data     = [],
+        matrix;
 
     for (var y = 0; y < pixelated.length; y++) {
       data[y] = [];
@@ -78,7 +79,7 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     var data  = imageData.data,
         pixelated = [],
         blockSize = settings.blockSize,
-        x0, y0, x1, y2,
+        x0, y0, x1, y1,
         row, column,
         value;
 
@@ -86,14 +87,16 @@ FaceWord.ImageProcessor = (function (FaceWord) {
       row            = y0 / blockSize;
       pixelated[row] = [];
       y1             = y0 + blockSize - 1;
-      if (y1 > image.height)
+      if (y1 > image.height){
         y1 = image.height -1;
+      }
 
       for (x0 = 0; x0 < image.width; x0+=blockSize) {
         column = x0 / blockSize;
         x1     = x0 + blockSize - 1;
-        if (x1 > image.width)
+        if (x1 > image.width) {
           x1 = image.width -1;
+        }
 
         value = _getPixelatedValue(data, x0, y0, x1, y1);
         pixelated[row][column] = value;
@@ -123,8 +126,8 @@ FaceWord.ImageProcessor = (function (FaceWord) {
   }
 
   function _truncateValue (val) {
-    if (val < 0) return 0;
-    if (val > 255) return 255;
+    if (val < 0) {return 0;}
+    if (val > 255) {return 255;}
     return val;
   }
 

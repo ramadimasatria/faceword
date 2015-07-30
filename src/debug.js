@@ -1,4 +1,4 @@
-FaceWord.Debug = (function (FW) {
+FaceWord.Debug = (function () {
   return {
     printMatrix: function (data, container) {
       var el = document.querySelector(container),

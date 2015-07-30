@@ -70,8 +70,6 @@ FaceWord = (function () {
     var matrix    = FaceWord.ImageProcessor.encode(imageData),
         weightedMatrix,
         block,
-        blockImageData,
-        blockMatrix,
         blockExist;
 
     clearCanvas();
@@ -119,9 +117,9 @@ FaceWord = (function () {
         width       = restoredBlock.width,
         height      = restoredBlock.height,
         fontMeasure = _measureFont(word, width, height),
-        fontSize;
+        fontSize, fontWidth, fontHeight;
 
-    if (!fontMeasure) return;
+    if (!fontMeasure) {return;}
 
     fontSize   = fontMeasure[0];
     fontWidth  = fontMeasure[1];
@@ -169,8 +167,6 @@ FaceWord = (function () {
   }
 
   function _assignRenderedSize (block, width, height) {
-    var blockSize = settings.blockSize;
-
     block.renderedWidth  = Math.ceil(width / settings.blockSize);
     block.renderedHeight = Math.ceil(height / settings.blockSize);
   }

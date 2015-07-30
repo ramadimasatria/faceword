@@ -1,4 +1,4 @@
-FaceWord.WordManager = (function (FaceWord) {
+FaceWord.WordManager = (function () {
   var wordPool = [],
       wordIter;
 
@@ -45,13 +45,13 @@ FaceWord.WordManager = (function (FaceWord) {
           "you'll", "you're", "you've"
         ];
 
-    wordArray.forEach(function(word, i){
+    wordArray.forEach(function(word){
       word = word.toLowerCase();
       if (stopWords.indexOf(word) === -1) {
         var found = false;
-        for (var x = 0; x < wordPool.length; x++) {
-          if (wordPool[x].word == word) {
-            wordPool[x].occurence++;
+        for (var i = 0; i < wordPool.length; i++) {
+          if (wordPool[i].word === word) {
+            wordPool[i].occurence++;
             found = true;
             break;
           }

@@ -10,7 +10,7 @@ FaceWord.BlockManager = (function (FaceWord) {
         columns        = matrix[0].length,
         weightedMatrix = [];
 
-    var value, weight, x, y, cell;
+    var value, weight, x, y;
 
     // weight column from right to left
     for (y = 0; y < rows; y++) {
@@ -56,7 +56,7 @@ FaceWord.BlockManager = (function (FaceWord) {
         maxArea, maxHeight,
         prevWidth, width, height;
 
-    if (!cell) return false;
+    if (!cell) {return false;}
 
     x            = cell.x;
     y            = cell.y;
@@ -92,7 +92,7 @@ FaceWord.BlockManager = (function (FaceWord) {
   }
 
   function normalize (weightedMatrix, block) {
-    if (!block.renderedWidth || !block.renderedHeight) return;
+    if (!block.renderedWidth || !block.renderedHeight) {return;}
 
     var height = block.renderedHeight,
         width = block.renderedWidth,
@@ -159,7 +159,7 @@ FaceWord.BlockManager = (function (FaceWord) {
       }
     }
 
-    if (maxWeight === 0) return false;
+    if (maxWeight === 0) {return false;}
 
     return cell;
   }
