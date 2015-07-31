@@ -44,6 +44,8 @@ FaceWord.ImageProcessor = (function (FaceWord) {
         data     = [],
         matrix;
 
+    valueMap[0] = _getBackground();
+
     for (var y = 0; y < pixelated.length; y++) {
       data[y] = [];
       for (var x = 0; x < pixelated[y].length; x++) {
@@ -123,6 +125,10 @@ FaceWord.ImageProcessor = (function (FaceWord) {
 
     // return value;
     return value > 200 ? 255 : 0;
+  }
+
+  function _getBackground () {
+    return 255; // white background
   }
 
   function _truncateValue (val) {
