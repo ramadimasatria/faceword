@@ -15,7 +15,7 @@ FaceWord = (function () {
 
   /**
    * Init function
-   * 
+   *
    * @param  {element}  i   image element
    * @param  {string}   t   text
    * @param  {string}   c   canvas selector
@@ -39,7 +39,7 @@ FaceWord = (function () {
 
   /**
    * Getter function for canvas context
-   * 
+   *
    * @return {CanvasRenderingContext2D}
    */
   function getCanvasContext () {
@@ -55,7 +55,7 @@ FaceWord = (function () {
 
   /**
    * Getter function for settings object
-   * 
+   *
    * @return {object} settings object
    */
   function getSettings () {
@@ -126,7 +126,8 @@ FaceWord = (function () {
     fontHeight = Math.ceil(fontSize * 0.8);
 
     ctx.font = fontSize + 'px serif';
-    ctx.fillText(word, x, y+fontHeight, width);
+    ctx.textBaseline = 'hanging';
+    ctx.fillText(word, x, y, width);
 
     _assignRenderedSize(block, fontWidth, fontHeight);
   }
