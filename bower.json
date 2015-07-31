@@ -6,7 +6,7 @@
     "Rama Dimasatria <ramadimasatria@gmail.com>"
   ],
   "description": "Convert image to word cloud.",
-  "main": "dist/FaceWord.js",
+  "main": ["dist/FaceWord.js"],
   "moduleType": [
     "globals"
   ],
