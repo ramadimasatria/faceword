@@ -1,4 +1,6 @@
 FaceWord = (function () {
+  'use strict';
+
   var settings = {
     contrast:      -10,
     blockSize:     5,
@@ -7,6 +9,7 @@ FaceWord = (function () {
     minWidth:      5,
     maxImageSize:  600,
     blockMinWidth: 3,
+    fontFamily:    'serif'
   };
 
   var image,
@@ -125,7 +128,7 @@ FaceWord = (function () {
     fontWidth  = fontMeasure[1];
     fontHeight = Math.ceil(fontSize * 0.8);
 
-    ctx.font = fontSize + 'px serif';
+    ctx.font = fontSize + 'px ' + settings.fontFamily;
     ctx.textBaseline = 'hanging';
     ctx.fillText(word, x, y, width);
 
