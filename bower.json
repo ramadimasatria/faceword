@@ -1,0 +1,26 @@
+{
+  "name": "faceword",
+  "version": "0.0.1",
+  "homepage": "https://github.com/ramadimasatria/faceword",
+  "authors": [
+    "Rama Dimasatria <ramadimasatria@gmail.com>"
+  ],
+  "description": "Convert image to word cloud.",
+  "main": "dist/FaceWord.js",
+  "moduleType": [
+    "globals"
+  ],
+  "license": "Apache",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "keywords": [
+    "image",
+    "word cloud",
+    "converter"
+  ]
+}
