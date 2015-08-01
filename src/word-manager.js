@@ -26,7 +26,7 @@ FaceWord.WordManager = (function () {
           "s", "t", "u", "v", "w", "x", "y", "z",
           "able", "about", "across", "after", "all", "almost", "also", "am", "among", "an",
           "and", "any", "are", "as", "at", "be", "because", "been", "but", "by", "can", "cannot",
-          "could", "dear", "did", "do", "does", "either", "else", "ever", "every", "for", "from",
+          "could", "dear", "did", "do", "don", "does", "either", "else", "ever", "every", "for", "from",
           "get", "got", "had", "has", "have", "he", "her", "hers", "him", "his", "how", "however",
           "i", "if", "in", "into", "is", "it", "its", "just", "least", "let", "like", "likely",
           "may", "me", "might", "most", "must", "my", "neither", "no", "nor", "not", "of", "off",
@@ -41,7 +41,7 @@ FaceWord.WordManager = (function () {
           "they'd", "they'll", "they're", "they've", "wasn't", "we'd", "we'll", "we're", "weren't",
           "what'd", "what's", "when'd", "when'll", "when's", "where'd", "where'll", "where's", "who'd",
           "who'll", "who's", "why'd", "why'll", "why's", "won't", "would've", "wouldn't", "you'd",
-          "you'll", "you're", "you've"
+          "you'll", "you're", "you've", "very"
         ];
 
     wordArray.forEach(function(word){
