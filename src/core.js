@@ -2,9 +2,10 @@ FaceWord = (function () {
   'use strict';
 
   var settings = {
-    contrast:      -10,
+    contrast:      0,
     blockSize:     5,
     minFontSize:   2,
+    maxFontSize:   48,
     minHeight:     5,
     minWidth:      5,
     maxImageSize:  600,
@@ -203,7 +204,7 @@ FaceWord = (function () {
         return false;
     }
 
-    while(wDiff > 0 && size < maxHeight){
+    while(wDiff > 0 && size < maxHeight && size < settings.maxFontSize){
       maxTextWidth = textWidth;
 
       size += 1;
