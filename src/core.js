@@ -69,29 +69,41 @@ FaceWord = (function () {
    * Where the magic happens
    */
   function run () {
-    var imageData = FaceWord.ImageProcessor.process(image);
-    var matrix    = FaceWord.ImageProcessor.encode(imageData),
+    var promise,
+        imageData,
+        matrix,
         weightedMatrix,
         block,
         blockExist;
 
-    clearCanvas();
-    for (var i = 1; i < matrix.valueMap.length; i++) {
-      weightedMatrix = FaceWord.BlockManager.weighMatrix(matrix.data, i);
-      blockExist = true;
+    promise = new Promise(function (resolve, reject) {
+      window.setTimeout(function() {
+        imageData = FaceWord.ImageProcessor.process(image);
+        matrix    = FaceWord.ImageProcessor.encode(imageData);
 
-      while(blockExist){
-        block = FaceWord.BlockManager.getBlock(weightedMatrix);
+        clearCanvas();
 
-        if (block) {
-          _renderBlock(block);
-          FaceWord.BlockManager.normalize(weightedMatrix, block);
-        } else {
-          blockExist = false;
+        for (var i = 1; i < matrix.valueMap.length; i++) {
+          weightedMatrix = FaceWord.BlockManager.weighMatrix(matrix.data, i);
+          blockExist = true;
+
+          while(blockExist){
+            block = FaceWord.BlockManager.getBlock(weightedMatrix);
+
+            if (block) {
+              _renderBlock(block);
+              FaceWord.BlockManager.normalize(weightedMatrix, block);
+            } else {
+              blockExist = false;
+            }
+          }
         }
-      }
-    }
 
+        resolve();
+      }, 1);
+    });
+
+    return promise;
   }
 
   ////////////////// Private Functions
