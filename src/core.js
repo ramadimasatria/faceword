@@ -92,14 +92,17 @@ FaceWord = (function () {
   }
 
   function _validateImage (img) {
+    var image = new Image();
+
     if (!(img instanceof HTMLImageElement) || !img.src) {
       throw new Error('Invalid image');
     }
 
-    img.width  = Math.min(img.width, settings.maxImageSize);
-    img.height = Math.min(img.height, settings.maxImageSize);
+    image.src    = img.src;
+    image.width  = Math.min(img.width, settings.maxImageSize);
+    image.height = Math.min(img.height, settings.maxImageSize);
 
-    return img;
+    return image;
   }
 
   function _validateText (text) {
