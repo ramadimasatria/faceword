@@ -84,7 +84,7 @@ FaceWord = (function () {
     text   = _validateText(t);
     canvas = _validateCanvas(c);
 
-    _setCanvasContext(canvas);
+    ctx = canvas.getContext('2d');
 
     FaceWord.ImageProcessor.init();
     FaceWord.BlockManager.init();
@@ -99,8 +99,6 @@ FaceWord = (function () {
     img.width  = Math.min(img.width, settings.maxImageSize);
     img.height = Math.min(img.height, settings.maxImageSize);
 
-    img.isValid = true;
-
     return img;
   }
 
@@ -112,16 +110,17 @@ FaceWord = (function () {
     return text;
   }
 
-  function _validateCanvas (canvas) {
-    return canvas;
-  }
+  function _validateCanvas (selector) {
+    var cnvs = document.querySelector(selector);
 
-  function _setCanvasContext (selector) {
-    canvas        = document.querySelector(selector);
-    canvas.width  = image.width;
-    canvas.height = image.height;
+    if (!cnvs || !(cnvs instanceof HTMLCanvasElement)) {
+      throw new Error('Invalid canvas selector');
+    }
 
-    ctx           = canvas.getContext('2d');
+    cnvs.width  = image.width;
+    cnvs.height = image.height;
+
+    return cnvs;
   }
 
   function _drawCanvas () {
@@ -130,10 +129,6 @@ FaceWord = (function () {
         weightedMatrix,
         block,
         blockExist;
-
-    if (!image.isValid) {
-      throw new Error('Invalid image');
-    }
 
     imageData = FaceWord.ImageProcessor.process(image);
     matrix    = FaceWord.ImageProcessor.encode(imageData);
