@@ -14,30 +14,36 @@ FaceWord = (function () {
 
   var image,
       canvas,
+      text,
       ctx;
 
   /**
-   * Init function
+   * Main function
    *
    * @param  {element}  i   image element
    * @param  {string}   t   text
    * @param  {string}   c   canvas selector
    * @param  {object}   s   settings object
+   *
+   * @return {promise}
    */
-  function init (i, t, c, s) {
-    for(var prop in s) {
-      if(s.hasOwnProperty(prop)){
-        settings[prop] = s[prop];
-      }
-    }
+  function run (i, t, c, s) {
+    var promise;
 
-    image  = _validateImage(i);
+    promise = new Promise(function (resolve, reject) {
+      window.setTimeout(function() {  // Make the function asynchronous
+        try{
+          _init(i, t, c, s);
+          _drawCanvas();
+        }catch(e){
+          reject(e.message);
+        }
 
-    _setCanvasContext(c);
+        resolve();
+      }, 1);
+    });
 
-    FaceWord.ImageProcessor.init(image);
-    FaceWord.BlockManager.init();
-    FaceWord.WordManager.init(t);
+    return promise;
   }
 
   /**
@@ -65,48 +71,50 @@ FaceWord = (function () {
     return settings;
   }
 
-  /**
-   * Where the magic happens
-   */
-  function run () {
-    var promise,
-        imageData,
-        matrix,
-        weightedMatrix,
-        block,
-        blockExist;
+  ////////////////// Private Functions
 
-    promise = new Promise(function (resolve, reject) {
-      window.setTimeout(function() {
-        imageData = FaceWord.ImageProcessor.process(image);
-        matrix    = FaceWord.ImageProcessor.encode(imageData);
+  function _init (i, t, c, s) {
+    for(var prop in s) {
+      if(s.hasOwnProperty(prop)){
+        settings[prop] = s[prop];
+      }
+    }
 
-        clearCanvas();
+    image  = _validateImage(i);
+    text   = _validateText(t);
+    canvas = _validateCanvas(c);
 
-        for (var i = 1; i < matrix.valueMap.length; i++) {
-          weightedMatrix = FaceWord.BlockManager.weighMatrix(matrix.data, i);
-          blockExist = true;
+    _setCanvasContext(canvas);
 
-          while(blockExist){
-            block = FaceWord.BlockManager.getBlock(weightedMatrix);
-
-            if (block) {
-              _renderBlock(block);
-              FaceWord.BlockManager.normalize(weightedMatrix, block);
-            } else {
-              blockExist = false;
-            }
-          }
-        }
-
-        resolve();
-      }, 1);
-    });
-
-    return promise;
+    FaceWord.ImageProcessor.init();
+    FaceWord.BlockManager.init();
+    FaceWord.WordManager.init(t);
   }
 
-  ////////////////// Private Functions
+  function _validateImage (img) {
+    if (!(img instanceof HTMLImageElement) || !img.src) {
+      throw new Error('Invalid image');
+    }
+
+    img.width  = Math.min(img.width, settings.maxImageSize);
+    img.height = Math.min(img.height, settings.maxImageSize);
+
+    img.isValid = true;
+
+    return img;
+  }
+
+  function _validateText (text) {
+    if (!text || typeof text !== 'string') {
+      throw new Error('Invalid text');
+    }
+
+    return text;
+  }
+
+  function _validateCanvas (canvas) {
+    return canvas;
+  }
 
   function _setCanvasContext (selector) {
     canvas        = document.querySelector(selector);
@@ -116,11 +124,37 @@ FaceWord = (function () {
     ctx           = canvas.getContext('2d');
   }
 
-  function _validateImage (img) {
-    img.width  = Math.min(img.width, settings.maxImageSize);
-    img.height = Math.min(img.height, settings.maxImageSize);
+  function _drawCanvas () {
+    var imageData,
+        matrix,
+        weightedMatrix,
+        block,
+        blockExist;
 
-    return img;
+    if (!image.isValid) {
+      throw new Error('Invalid image');
+    }
+
+    imageData = FaceWord.ImageProcessor.process(image);
+    matrix    = FaceWord.ImageProcessor.encode(imageData);
+
+    clearCanvas();
+
+    for (var i = 1; i < matrix.valueMap.length; i++) {
+      weightedMatrix = FaceWord.BlockManager.weighMatrix(matrix.data, i);
+      blockExist = true;
+
+      while(blockExist){
+        block = FaceWord.BlockManager.getBlock(weightedMatrix);
+
+        if (block) {
+          _renderBlock(block);
+          FaceWord.BlockManager.normalize(weightedMatrix, block);
+        } else {
+          blockExist = false;
+        }
+      }
+    }
   }
 
   function _renderBlock (block) {
@@ -190,7 +224,6 @@ FaceWord = (function () {
   //////////////////
 
   return {
-    init:             init,
     getCanvasContext: getCanvasContext,
     clearCanvas:      clearCanvas,
     getSettings:      getSettings,

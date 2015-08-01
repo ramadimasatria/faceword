@@ -3,10 +3,8 @@ FaceWord.WordManager = (function () {
       wordIter;
 
   function init (text) {
-    wordPool = [];
+    wordPool = _generateWordPool(text);
     wordIter = 0;
-
-    _generateWordPool(text);
   }
 
   function getWord () {
@@ -21,7 +19,8 @@ FaceWord.WordManager = (function () {
   ///////////////// Private Functions
 
   function _generateWordPool (text) {
-    var wordArray = text.match(/[A-z]+/g),
+    var wordPool  = [],
+        wordArray = text.match(/[A-z]+/g),
         stopWords = [
           "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r",
           "s", "t", "u", "v", "w", "x", "y", "z",
@@ -69,6 +68,12 @@ FaceWord.WordManager = (function () {
     wordPool.sort(function (a, b) {
       return b.occurence - a.occurence;
     });
+
+    if (wordPool.length === 0) {
+      throw new Error('Cannot parse text');
+    }
+
+    return wordPool;
   }
 
   /////////////////
