@@ -17,6 +17,5 @@ var img = image,             // Input image element
     text = 'blah blah blah', // Text to render
     canvas = '#canvas';      // Output canvas selector
 
-FaceWord.init(img, text, canvas);
-FaceWord.run();
+FaceWord.run(img, text, canvas);
 ```
