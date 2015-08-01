@@ -1,47 +1,57 @@
-/*! FaceWord - v0.0.1 - 2015-07-30
+/*! FaceWord - v0.0.2 - 2015-08-02
 * Copyright (c) 2015 Rama Dimasatria; Licensed  */
 FaceWord = (function () {
+  'use strict';
+
   var settings = {
-    contrast:      -10,
+    contrast:      0,
     blockSize:     5,
     minFontSize:   2,
+    maxFontSize:   48,
     minHeight:     5,
     minWidth:      5,
     maxImageSize:  600,
     blockMinWidth: 3,
+    fontFamily:    'serif'
   };
 
   var image,
       canvas,
+      text,
       ctx;
 
   /**
-   * Init function
-   * 
+   * Main function
+   *
    * @param  {element}  i   image element
    * @param  {string}   t   text
    * @param  {string}   c   canvas selector
    * @param  {object}   s   settings object
+   *
+   * @return {promise}
    */
-  function init (i, t, c, s) {
-    for(var prop in s) {
-      if(s.hasOwnProperty(prop)){
-        settings[prop] = s[prop];
-      }
-    }
+  function run (i, t, c, s) {
+    var promise;
 
-    image  = _validateImage(i);
+    promise = new Promise(function (resolve, reject) {
+      window.setTimeout(function() {  // Make the function asynchronous
+        try{
+          _init(i, t, c, s);
+          _drawCanvas();
+        }catch(e){
+          reject(e.message);
+        }
 
-    _setCanvasContext(c);
+        resolve();
+      }, 1);
+    });
 
-    FaceWord.ImageProcessor.init(image);
-    FaceWord.BlockManager.init();
-    FaceWord.WordManager.init(t);
+    return promise;
   }
 
   /**
    * Getter function for canvas context
-   * 
+   *
    * @return {CanvasRenderingContext2D}
    */
   function getCanvasContext () {
@@ -57,24 +67,80 @@ FaceWord = (function () {
 
   /**
    * Getter function for settings object
-   * 
+   *
    * @return {object} settings object
    */
   function getSettings () {
     return settings;
   }
 
-  /**
-   * Where the magic happens
-   */
-  function run () {
-    var imageData = FaceWord.ImageProcessor.process(image);
-    var matrix    = FaceWord.ImageProcessor.encode(imageData),
+  ////////////////// Private Functions
+
+  function _init (i, t, c, s) {
+    for(var prop in s) {
+      if(s.hasOwnProperty(prop)){
+        settings[prop] = s[prop];
+      }
+    }
+
+    image  = _validateImage(i);
+    text   = _validateText(t);
+    canvas = _validateCanvas(c);
+
+    ctx = canvas.getContext('2d');
+
+    FaceWord.ImageProcessor.init();
+    FaceWord.BlockManager.init();
+    FaceWord.WordManager.init(t);
+  }
+
+  function _validateImage (img) {
+    var image = new Image();
+
+    if (!(img instanceof HTMLImageElement) || !img.src) {
+      throw new Error('Invalid image');
+    }
+
+    image.src    = img.src;
+    image.width  = Math.min(img.width, settings.maxImageSize);
+    image.height = Math.min(img.height, settings.maxImageSize);
+
+    return image;
+  }
+
+  function _validateText (text) {
+    if (!text || typeof text !== 'string') {
+      throw new Error('Invalid text');
+    }
+
+    return text;
+  }
+
+  function _validateCanvas (selector) {
+    var cnvs = document.querySelector(selector);
+
+    if (!cnvs || !(cnvs instanceof HTMLCanvasElement)) {
+      throw new Error('Invalid canvas selector');
+    }
+
+    cnvs.width  = image.width;
+    cnvs.height = image.height;
+
+    return cnvs;
+  }
+
+  function _drawCanvas () {
+    var imageData,
+        matrix,
         weightedMatrix,
         block,
         blockExist;
 
+    imageData = FaceWord.ImageProcessor.process(image);
+    matrix    = FaceWord.ImageProcessor.encode(imageData);
+
     clearCanvas();
+
     for (var i = 1; i < matrix.valueMap.length; i++) {
       weightedMatrix = FaceWord.BlockManager.weighMatrix(matrix.data, i);
       blockExist = true;
@@ -90,24 +156,6 @@ FaceWord = (function () {
         }
       }
     }
-
-  }
-
-  ////////////////// Private Functions
-
-  function _setCanvasContext (selector) {
-    canvas        = document.querySelector(selector);
-    canvas.width  = image.width;
-    canvas.height = image.height;
-
-    ctx           = canvas.getContext('2d');
-  }
-
-  function _validateImage (img) {
-    img.width  = Math.min(img.width, settings.maxImageSize);
-    img.height = Math.min(img.height, settings.maxImageSize);
-
-    return img;
   }
 
   function _renderBlock (block) {
@@ -127,8 +175,9 @@ FaceWord = (function () {
     fontWidth  = fontMeasure[1];
     fontHeight = Math.ceil(fontSize * 0.8);
 
-    ctx.font = fontSize + 'px serif';
-    ctx.fillText(word, x, y+fontHeight, width);
+    ctx.font = fontSize + 'px ' + settings.fontFamily;
+    ctx.textBaseline = 'hanging';
+    ctx.fillText(word, x, y, width);
 
     _assignRenderedSize(block, fontWidth, fontHeight);
   }
@@ -157,7 +206,7 @@ FaceWord = (function () {
         return false;
     }
 
-    while(wDiff > 0 && size < maxHeight){
+    while(wDiff > 0 && size < maxHeight && size < settings.maxFontSize){
       maxTextWidth = textWidth;
 
       size += 1;
@@ -176,7 +225,6 @@ FaceWord = (function () {
   //////////////////
 
   return {
-    init:             init,
     getCanvasContext: getCanvasContext,
     clearCanvas:      clearCanvas,
     getSettings:      getSettings,
@@ -406,6 +454,8 @@ FaceWord.ImageProcessor = (function (FaceWord) {
         data     = [],
         matrix;
 
+    valueMap[0] = _getBackground();
+
     for (var y = 0; y < pixelated.length; y++) {
       data[y] = [];
       for (var x = 0; x < pixelated[y].length; x++) {
@@ -487,6 +537,10 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     return value > 200 ? 255 : 0;
   }
 
+  function _getBackground () {
+    return 255; // white background
+  }
+
   function _truncateValue (val) {
     if (val < 0) {return 0;}
     if (val > 255) {return 255;}
@@ -507,10 +561,8 @@ FaceWord.WordManager = (function () {
       wordIter;
 
   function init (text) {
-    wordPool = [];
+    wordPool = _generateWordPool(text);
     wordIter = 0;
-
-    _generateWordPool(text);
   }
 
   function getWord () {
@@ -525,13 +577,14 @@ FaceWord.WordManager = (function () {
   ///////////////// Private Functions
 
   function _generateWordPool (text) {
-    var wordArray = text.match(/[A-z]+/g),
+    var wordPool  = [],
+        wordArray = text.match(/[A-z]+/g),
         stopWords = [
           "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r",
           "s", "t", "u", "v", "w", "x", "y", "z",
           "able", "about", "across", "after", "all", "almost", "also", "am", "among", "an",
           "and", "any", "are", "as", "at", "be", "because", "been", "but", "by", "can", "cannot",
-          "could", "dear", "did", "do", "does", "either", "else", "ever", "every", "for", "from",
+          "could", "dear", "did", "do", "don", "does", "either", "else", "ever", "every", "for", "from",
           "get", "got", "had", "has", "have", "he", "her", "hers", "him", "his", "how", "however",
           "i", "if", "in", "into", "is", "it", "its", "just", "least", "let", "like", "likely",
           "may", "me", "might", "most", "must", "my", "neither", "no", "nor", "not", "of", "off",
@@ -546,7 +599,7 @@ FaceWord.WordManager = (function () {
           "they'd", "they'll", "they're", "they've", "wasn't", "we'd", "we'll", "we're", "weren't",
           "what'd", "what's", "when'd", "when'll", "when's", "where'd", "where'll", "where's", "who'd",
           "who'll", "who's", "why'd", "why'll", "why's", "won't", "would've", "wouldn't", "you'd",
-          "you'll", "you're", "you've"
+          "you'll", "you're", "you've", "very"
         ];
 
     wordArray.forEach(function(word){
@@ -573,6 +626,12 @@ FaceWord.WordManager = (function () {
     wordPool.sort(function (a, b) {
       return b.occurence - a.occurence;
     });
+
+    if (wordPool.length === 0) {
+      throw new Error('Cannot parse text');
+    }
+
+    return wordPool;
   }
 
   /////////////////
