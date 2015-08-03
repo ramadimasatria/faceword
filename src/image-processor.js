@@ -40,22 +40,21 @@ FaceWord.ImageProcessor = (function (FaceWord) {
 
   function encode (imageData) {
     var pixelated = _pixelate(imageData),
-        valueMap = [],
-        data     = [],
+        data = [],
+        valueMap,
+        value,
+        valueIndex,
         matrix;
 
-    valueMap[0] = _getBackground();
+    valueMap = _generateValueMap();
 
     for (var y = 0; y < pixelated.length; y++) {
       data[y] = [];
       for (var x = 0; x < pixelated[y].length; x++) {
-        var valueIndex = valueMap.indexOf(pixelated[y][x]);
-        if (valueIndex === -1) {
-          valueMap.push(pixelated[y][x]);
-          data[y][x] = valueMap.length - 1;
-        } else {
-          data[y][x] = valueIndex;
-        }
+        value = _getClosestValue(pixelated[y][x], valueMap);
+        valueIndex = valueMap.indexOf(value);
+
+        data[y][x] = valueIndex;
       }
     }
 
@@ -123,18 +122,40 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     }
     value = Math.floor(sum/count);
 
-    // return value;
-    return value > 200 ? 255 : 0;
-  }
-
-  function _getBackground () {
-    return 255; // white background
+    return value;
   }
 
   function _truncateValue (val) {
     if (val < 0) {return 0;}
     if (val > 255) {return 255;}
     return val;
+  }
+
+  function _generateValueMap () {
+    var colors = settings.colors,
+        valueMap = [];
+
+    for (var i = colors; i >= 0; i--) {
+      valueMap[i] = Math.floor(255 * (i/colors));
+    }
+
+    return valueMap;
+  }
+
+  function _getClosestValue (pixelatedValue, valueMap) {
+    var treshold,
+        value;
+
+    treshold = Math.floor((valueMap[1] - valueMap[0]) / 2);
+
+    for (var i = 0; i < valueMap.length; i++) {
+      if (Math.abs(pixelatedValue - valueMap[i]) < treshold) {
+        value = valueMap[i];
+        break;
+      }
+    }
+
+    return value;
   }
 
   /////////////////
