@@ -8,10 +8,10 @@ FaceWord = (function () {
     maxFontSize:   48,
     minHeight:     5,
     minWidth:      5,
-    maxImageSize:  600,
+    imgMaxWidth:   600,
     blockMinWidth: 3,
     fontFamily:    'serif',
-    colors:        3,
+    colors:        8,
     inverse:       false
   };
 
@@ -102,8 +102,8 @@ FaceWord = (function () {
     }
 
     image.src    = img.src;
-    image.width  = Math.min(img.width, settings.maxImageSize);
-    image.height = Math.min(img.height, settings.maxImageSize);
+    image.width  = Math.min(img.width, settings.imgMaxWidth);
+    image.height = img.height;
 
     return image;
   }
