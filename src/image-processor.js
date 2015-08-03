@@ -39,27 +39,41 @@ FaceWord.ImageProcessor = (function (FaceWord) {
   }
 
   function encode (imageData) {
-    var pixelated = _pixelate(imageData),
-        data = [],
-        valueMap,
-        value,
-        valueIndex,
-        matrix;
+    var data  = imageData.data,
+        matrixData = [],
+        blockSize = settings.blockSize,
+        x0, y0, x1, y1,
+        matrix, row, column,
+        value, valueIndex, valueMap;
 
     valueMap = _generateValueMap();
 
-    for (var y = 0; y < pixelated.length; y++) {
-      data[y] = [];
-      for (var x = 0; x < pixelated[y].length; x++) {
-        value = _getClosestValue(pixelated[y][x], valueMap);
+    for (y0 = 0; y0 < image.height; y0+=blockSize) {
+      row            = y0 / blockSize;
+      matrixData[row] = [];
+      y1             = y0 + blockSize - 1;
+      if (y1 > image.height){
+        y1 = image.height -1;
+      }
+
+      for (x0 = 0; x0 < image.width; x0+=blockSize) {
+        column = x0 / blockSize;
+        x1     = x0 + blockSize - 1;
+        if (x1 > image.width) {
+          x1 = image.width -1;
+        }
+
+        value = _getPixelatedValue(data, x0, y0, x1, y1);
+        value = _getClosestValue(value, valueMap);
+
         valueIndex = valueMap.indexOf(value);
 
-        data[y][x] = valueIndex;
+        matrixData[row][column] = valueIndex;
       }
     }
 
     matrix = {
-      data:      data,
+      data:      matrixData,
       valueMap:  valueMap,
     };
 
@@ -74,37 +88,6 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     image.height = img.height;
 
     ctx.drawImage(image.el, 0, 0, image.width, image.height);
-  }
-
-  function _pixelate (imageData) {
-    var data  = imageData.data,
-        pixelated = [],
-        blockSize = settings.blockSize,
-        x0, y0, x1, y1,
-        row, column,
-        value;
-
-    for (y0 = 0; y0 < image.height; y0+=blockSize) {
-      row            = y0 / blockSize;
-      pixelated[row] = [];
-      y1             = y0 + blockSize - 1;
-      if (y1 > image.height){
-        y1 = image.height -1;
-      }
-
-      for (x0 = 0; x0 < image.width; x0+=blockSize) {
-        column = x0 / blockSize;
-        x1     = x0 + blockSize - 1;
-        if (x1 > image.width) {
-          x1 = image.width -1;
-        }
-
-        value = _getPixelatedValue(data, x0, y0, x1, y1);
-        pixelated[row][column] = value;
-      }
-    }
-
-    return pixelated;
   }
 
   function _getPixelatedValue (data, x0, y0, x1, y1) {
