@@ -121,6 +121,9 @@ FaceWord.ImageProcessor = (function (FaceWord) {
       }
     }
     value = Math.floor(sum/count);
+    if (settings.inverse) {
+      value = _inverseValue(value);
+    }
 
     return value;
   }
@@ -129,6 +132,10 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     if (val < 0) {return 0;}
     if (val > 255) {return 255;}
     return val;
+  }
+
+  function _inverseValue (val) {
+    return 255 - val;
   }
 
   function _generateValueMap () {

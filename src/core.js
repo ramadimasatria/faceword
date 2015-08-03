@@ -11,7 +11,8 @@ FaceWord = (function () {
     maxImageSize:  600,
     blockMinWidth: 3,
     fontFamily:    'serif',
-    colors:        3
+    colors:        3,
+    inverse:       false
   };
 
   var image,
