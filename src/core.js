@@ -93,15 +93,26 @@ FaceWord = (function () {
     FaceWord.BlockManager.init();
     FaceWord.WordManager.init(t);
   }
+  
+  function _isImage (node) {
+    return node instanceof HTMLImageElement && img.src;
+  }
+
+  function _isCanvas (node) {
+    return node instanceof HTMLCanvasElement;
+  }
 
   function _validateImage (img) {
     var image = new Image();
 
-    if (!(img instanceof HTMLImageElement) || !img.src) {
+    if (_isImage(img)) {
+      image.src = img.src;
+    } else if (_isCanvas(img)) {
+      image.src = img.toDataURL();
+    } else {
       throw new Error('Invalid image');
     }
 
-    image.src    = img.src;
     image.width  = Math.min(img.width, settings.imgMaxWidth);
     image.height = img.height;
 
