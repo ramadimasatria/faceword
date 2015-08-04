@@ -12,7 +12,8 @@ FaceWord = (function () {
     blockMinWidth: 3,
     fontFamily:    'serif',
     colors:        8,
-    inverse:       false
+    inverse:       false,
+    orientation:   'mixed'
   };
 
   var image,
@@ -20,10 +21,12 @@ FaceWord = (function () {
       text,
       ctx;
 
+  var orientations = ['vertical', 'horizontal'];
+
   /**
    * Main function
    *
-   * @param  {element}  i   image element
+   * @param  {element}  i   input image (Image or Canvas)
    * @param  {string}   t   text
    * @param  {string}   c   canvas selector
    * @param  {object}   s   settings object
@@ -146,7 +149,8 @@ FaceWord = (function () {
         weightedMatrix,
         block,
         blockExist,
-        color;
+        color,
+        orientation;
 
     imageData = FaceWord.ImageProcessor.process(image);
     matrix    = FaceWord.ImageProcessor.encode(imageData);
@@ -162,7 +166,8 @@ FaceWord = (function () {
         block = FaceWord.BlockManager.getBlock(weightedMatrix);
 
         if (block) {
-          _renderBlock(block, color);
+          orientation = _getOrientation(block);
+          _renderBlock(block, color, orientation);
           FaceWord.BlockManager.normalize(weightedMatrix, block);
         } else {
           blockExist = false;
@@ -171,7 +176,7 @@ FaceWord = (function () {
     }
   }
 
-  function _renderBlock (block, color) {
+  function _renderBlock (block, color, orientation) {
     var restoredBlock =  _restoreBlockSize(block);
 
     var word        = FaceWord.WordManager.getWord(),
@@ -192,6 +197,8 @@ FaceWord = (function () {
     ctx.textBaseline = 'hanging';
     ctx.fillStyle    = 'rgb('+color+','+color+','+color+')';
     ctx.fillText(word, x, y, width);
+
+    ctx.restore();
 
     _assignRenderedSize(block, fontWidth, fontHeight);
   }
@@ -234,6 +241,18 @@ FaceWord = (function () {
   function _assignRenderedSize (block, width, height) {
     block.renderedWidth  = Math.ceil(width / settings.blockSize);
     block.renderedHeight = Math.ceil(height / settings.blockSize);
+  }
+
+  function _getOrientation (block) {
+    if (orientations.indexOf(settings.orientation) > -1) {
+      return settings.orientation;
+    }
+
+    if (block.width >= block.height) {
+      return 'horizontal';
+    } else {
+      return 'vertical';
+    }
   }
 
   //////////////////
