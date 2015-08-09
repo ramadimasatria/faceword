@@ -1,4 +1,4 @@
-/*! FaceWord - v0.0.2 - 2015-08-02
+/*! FaceWord - v0.0.3 - 2015-08-09
 * Copyright (c) 2015 Rama Dimasatria; Licensed  */
 FaceWord = (function () {
   'use strict';
@@ -8,11 +8,11 @@ FaceWord = (function () {
     blockSize:     5,
     minFontSize:   2,
     maxFontSize:   48,
-    minHeight:     5,
-    minWidth:      5,
-    maxImageSize:  600,
-    blockMinWidth: 3,
-    fontFamily:    'serif'
+    imgMaxWidth:   600,
+    fontFamily:    'serif',
+    colors:        8,
+    inverse:       false,
+    orientation:   'mixed'
   };
 
   var image,
@@ -23,7 +23,7 @@ FaceWord = (function () {
   /**
    * Main function
    *
-   * @param  {element}  i   image element
+   * @param  {element}  i   input image (Image or Canvas)
    * @param  {string}   t   text
    * @param  {string}   c   canvas selector
    * @param  {object}   s   settings object
@@ -94,16 +94,27 @@ FaceWord = (function () {
     FaceWord.WordManager.init(t);
   }
 
+  function _isImage (node) {
+    return node instanceof HTMLImageElement && node.src;
+  }
+
+  function _isCanvas (node) {
+    return node instanceof HTMLCanvasElement;
+  }
+
   function _validateImage (img) {
     var image = new Image();
 
-    if (!(img instanceof HTMLImageElement) || !img.src) {
+    if (_isImage(img)) {
+      image.src = img.src;
+    } else if (_isCanvas(img)) {
+      image.src = img.toDataURL();
+    } else {
       throw new Error('Invalid image');
     }
 
-    image.src    = img.src;
-    image.width  = Math.min(img.width, settings.maxImageSize);
-    image.height = Math.min(img.height, settings.maxImageSize);
+    image.width  = Math.min(img.width, settings.imgMaxWidth);
+    image.height = img.height;
 
     return image;
   }
@@ -134,14 +145,16 @@ FaceWord = (function () {
         matrix,
         weightedMatrix,
         block,
-        blockExist;
+        blockExist,
+        color;
 
     imageData = FaceWord.ImageProcessor.process(image);
     matrix    = FaceWord.ImageProcessor.encode(imageData);
 
     clearCanvas();
 
-    for (var i = 1; i < matrix.valueMap.length; i++) {
+    for (var i = 0; i < matrix.valueMap.length - 1; i++) {
+      color = matrix.valueMap[i];
       weightedMatrix = FaceWord.BlockManager.weighMatrix(matrix.data, i);
       blockExist = true;
 
@@ -149,7 +162,7 @@ FaceWord = (function () {
         block = FaceWord.BlockManager.getBlock(weightedMatrix);
 
         if (block) {
-          _renderBlock(block);
+          _renderBlock(block, color);
           FaceWord.BlockManager.normalize(weightedMatrix, block);
         } else {
           blockExist = false;
@@ -158,7 +171,7 @@ FaceWord = (function () {
     }
   }
 
-  function _renderBlock (block) {
+  function _renderBlock (block, color) {
     var restoredBlock =  _restoreBlockSize(block);
 
     var word        = FaceWord.WordManager.getWord(),
@@ -175,9 +188,12 @@ FaceWord = (function () {
     fontWidth  = fontMeasure[1];
     fontHeight = Math.ceil(fontSize * 0.8);
 
-    ctx.font = fontSize + 'px ' + settings.fontFamily;
+    ctx.font         = fontSize + 'px ' + settings.fontFamily;
     ctx.textBaseline = 'hanging';
+    ctx.fillStyle    = 'rgb('+color+','+color+','+color+')';
     ctx.fillText(word, x, y, width);
+
+    ctx.restore();
 
     _assignRenderedSize(block, fontWidth, fontHeight);
   }
@@ -296,7 +312,7 @@ FaceWord.BlockManager = (function (FaceWord) {
     x            = cell.x;
     y            = cell.y;
     maxArea      = 0;
-    maxHeight    = Math.min(cell.rowWeight, Math.ceil(0.5*cell.colWeight));
+    maxHeight    = cell.rowWeight;
     prevWidth    = cell.colWeight;
     for (var row = 0; row < maxHeight; row++) {
       var observedCell = weightedMatrix[y+row][x],
@@ -449,28 +465,41 @@ FaceWord.ImageProcessor = (function (FaceWord) {
   }
 
   function encode (imageData) {
-    var pixelated = _pixelate(imageData),
-        valueMap = [],
-        data     = [],
-        matrix;
+    var data  = imageData.data,
+        matrixData = [],
+        blockSize = settings.blockSize,
+        x0, y0, x1, y1,
+        matrix, row, column,
+        value, valueIndex, valueMap;
 
-    valueMap[0] = _getBackground();
+    valueMap = _generateValueMap();
 
-    for (var y = 0; y < pixelated.length; y++) {
-      data[y] = [];
-      for (var x = 0; x < pixelated[y].length; x++) {
-        var valueIndex = valueMap.indexOf(pixelated[y][x]);
-        if (valueIndex === -1) {
-          valueMap.push(pixelated[y][x]);
-          data[y][x] = valueMap.length - 1;
-        } else {
-          data[y][x] = valueIndex;
+    for (y0 = 0; y0 < image.height; y0+=blockSize) {
+      row            = y0 / blockSize;
+      matrixData[row] = [];
+      y1             = y0 + blockSize - 1;
+      if (y1 > image.height){
+        y1 = image.height -1;
+      }
+
+      for (x0 = 0; x0 < image.width; x0+=blockSize) {
+        column = x0 / blockSize;
+        x1     = x0 + blockSize - 1;
+        if (x1 > image.width) {
+          x1 = image.width -1;
         }
+
+        value = _getPixelatedValue(data, x0, y0, x1, y1);
+        value = _getClosestValue(value, valueMap);
+
+        valueIndex = valueMap.indexOf(value);
+
+        matrixData[row][column] = valueIndex;
       }
     }
 
     matrix = {
-      data:      data,
+      data:      matrixData,
       valueMap:  valueMap,
     };
 
@@ -487,37 +516,6 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     ctx.drawImage(image.el, 0, 0, image.width, image.height);
   }
 
-  function _pixelate (imageData) {
-    var data  = imageData.data,
-        pixelated = [],
-        blockSize = settings.blockSize,
-        x0, y0, x1, y1,
-        row, column,
-        value;
-
-    for (y0 = 0; y0 < image.height; y0+=blockSize) {
-      row            = y0 / blockSize;
-      pixelated[row] = [];
-      y1             = y0 + blockSize - 1;
-      if (y1 > image.height){
-        y1 = image.height -1;
-      }
-
-      for (x0 = 0; x0 < image.width; x0+=blockSize) {
-        column = x0 / blockSize;
-        x1     = x0 + blockSize - 1;
-        if (x1 > image.width) {
-          x1 = image.width -1;
-        }
-
-        value = _getPixelatedValue(data, x0, y0, x1, y1);
-        pixelated[row][column] = value;
-      }
-    }
-
-    return pixelated;
-  }
-
   function _getPixelatedValue (data, x0, y0, x1, y1) {
     var sum = 0,
         count = 0,
@@ -532,19 +530,48 @@ FaceWord.ImageProcessor = (function (FaceWord) {
       }
     }
     value = Math.floor(sum/count);
+    if (settings.inverse) {
+      value = _inverseValue(value);
+    }
 
-    // return value;
-    return value > 200 ? 255 : 0;
-  }
-
-  function _getBackground () {
-    return 255; // white background
+    return value;
   }
 
   function _truncateValue (val) {
     if (val < 0) {return 0;}
     if (val > 255) {return 255;}
     return val;
+  }
+
+  function _inverseValue (val) {
+    return 255 - val;
+  }
+
+  function _generateValueMap () {
+    var colors = settings.colors,
+        valueMap = [];
+
+    for (var i = colors; i >= 0; i--) {
+      valueMap[i] = Math.floor(255 * (i/colors));
+    }
+
+    return valueMap;
+  }
+
+  function _getClosestValue (pixelatedValue, valueMap) {
+    var treshold,
+        value;
+
+    treshold = Math.floor((valueMap[1] - valueMap[0]) / 2);
+
+    for (var i = 0; i < valueMap.length; i++) {
+      if (Math.abs(pixelatedValue - valueMap[i]) < treshold) {
+        value = valueMap[i];
+        break;
+      }
+    }
+
+    return value;
   }
 
   /////////////////
