@@ -6,10 +6,7 @@ FaceWord = (function () {
     blockSize:     5,
     minFontSize:   2,
     maxFontSize:   48,
-    minHeight:     5,
-    minWidth:      5,
     imgMaxWidth:   600,
-    blockMinWidth: 3,
     fontFamily:    'serif',
     colors:        8,
     inverse:       false,
@@ -20,8 +17,6 @@ FaceWord = (function () {
       canvas,
       text,
       ctx;
-
-  var orientations = ['vertical', 'horizontal'];
 
   /**
    * Main function
@@ -96,7 +91,7 @@ FaceWord = (function () {
     FaceWord.BlockManager.init();
     FaceWord.WordManager.init(t);
   }
-  
+
   function _isImage (node) {
     return node instanceof HTMLImageElement && img.src;
   }
@@ -166,8 +161,7 @@ FaceWord = (function () {
         block = FaceWord.BlockManager.getBlock(weightedMatrix);
 
         if (block) {
-          orientation = _getOrientation(block);
-          _renderBlock(block, color, orientation);
+          _renderBlock(block, color);
           FaceWord.BlockManager.normalize(weightedMatrix, block);
         } else {
           blockExist = false;
@@ -176,7 +170,7 @@ FaceWord = (function () {
     }
   }
 
-  function _renderBlock (block, color, orientation) {
+  function _renderBlock (block, color) {
     var restoredBlock =  _restoreBlockSize(block);
 
     var word        = FaceWord.WordManager.getWord(),
@@ -241,18 +235,6 @@ FaceWord = (function () {
   function _assignRenderedSize (block, width, height) {
     block.renderedWidth  = Math.ceil(width / settings.blockSize);
     block.renderedHeight = Math.ceil(height / settings.blockSize);
-  }
-
-  function _getOrientation (block) {
-    if (orientations.indexOf(settings.orientation) > -1) {
-      return settings.orientation;
-    }
-
-    if (block.width >= block.height) {
-      return 'horizontal';
-    } else {
-      return 'vertical';
-    }
   }
 
   //////////////////
