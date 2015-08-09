@@ -93,7 +93,7 @@ FaceWord = (function () {
   }
 
   function _isImage (node) {
-    return node instanceof HTMLImageElement && img.src;
+    return node instanceof HTMLImageElement && node.src;
   }
 
   function _isCanvas (node) {
@@ -144,8 +144,7 @@ FaceWord = (function () {
         weightedMatrix,
         block,
         blockExist,
-        color,
-        orientation;
+        color;
 
     imageData = FaceWord.ImageProcessor.process(image);
     matrix    = FaceWord.ImageProcessor.encode(imageData);
