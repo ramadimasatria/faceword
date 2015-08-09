@@ -6,11 +6,11 @@ FaceWord = (function () {
     blockSize:     5,
     minFontSize:   2,
     maxFontSize:   48,
-    minHeight:     5,
-    minWidth:      5,
-    maxImageSize:  600,
-    blockMinWidth: 3,
-    fontFamily:    'serif'
+    imgMaxWidth:   600,
+    fontFamily:    'serif',
+    colors:        8,
+    inverse:       false,
+    orientation:   'mixed'
   };
 
   var image,
@@ -21,7 +21,7 @@ FaceWord = (function () {
   /**
    * Main function
    *
-   * @param  {element}  i   image element
+   * @param  {element}  i   input image (Image or Canvas)
    * @param  {string}   t   text
    * @param  {string}   c   canvas selector
    * @param  {object}   s   settings object
@@ -92,16 +92,27 @@ FaceWord = (function () {
     FaceWord.WordManager.init(t);
   }
 
+  function _isImage (node) {
+    return node instanceof HTMLImageElement && img.src;
+  }
+
+  function _isCanvas (node) {
+    return node instanceof HTMLCanvasElement;
+  }
+
   function _validateImage (img) {
     var image = new Image();
 
-    if (!(img instanceof HTMLImageElement) || !img.src) {
+    if (_isImage(img)) {
+      image.src = img.src;
+    } else if (_isCanvas(img)) {
+      image.src = img.toDataURL();
+    } else {
       throw new Error('Invalid image');
     }
 
-    image.src    = img.src;
-    image.width  = Math.min(img.width, settings.maxImageSize);
-    image.height = Math.min(img.height, settings.maxImageSize);
+    image.width  = Math.min(img.width, settings.imgMaxWidth);
+    image.height = img.height;
 
     return image;
   }
@@ -132,14 +143,17 @@ FaceWord = (function () {
         matrix,
         weightedMatrix,
         block,
-        blockExist;
+        blockExist,
+        color,
+        orientation;
 
     imageData = FaceWord.ImageProcessor.process(image);
     matrix    = FaceWord.ImageProcessor.encode(imageData);
 
     clearCanvas();
 
-    for (var i = 1; i < matrix.valueMap.length; i++) {
+    for (var i = 0; i < matrix.valueMap.length - 1; i++) {
+      color = matrix.valueMap[i];
       weightedMatrix = FaceWord.BlockManager.weighMatrix(matrix.data, i);
       blockExist = true;
 
@@ -147,7 +161,7 @@ FaceWord = (function () {
         block = FaceWord.BlockManager.getBlock(weightedMatrix);
 
         if (block) {
-          _renderBlock(block);
+          _renderBlock(block, color);
           FaceWord.BlockManager.normalize(weightedMatrix, block);
         } else {
           blockExist = false;
@@ -156,7 +170,7 @@ FaceWord = (function () {
     }
   }
 
-  function _renderBlock (block) {
+  function _renderBlock (block, color) {
     var restoredBlock =  _restoreBlockSize(block);
 
     var word        = FaceWord.WordManager.getWord(),
@@ -173,9 +187,12 @@ FaceWord = (function () {
     fontWidth  = fontMeasure[1];
     fontHeight = Math.ceil(fontSize * 0.8);
 
-    ctx.font = fontSize + 'px ' + settings.fontFamily;
+    ctx.font         = fontSize + 'px ' + settings.fontFamily;
     ctx.textBaseline = 'hanging';
+    ctx.fillStyle    = 'rgb('+color+','+color+','+color+')';
     ctx.fillText(word, x, y, width);
+
+    ctx.restore();
 
     _assignRenderedSize(block, fontWidth, fontHeight);
   }
