@@ -8,6 +8,7 @@ FaceWord = (function () {
     maxFontSize:   48,
     imgMaxWidth:   600,
     fontFamily:    'serif',
+    fontWeight:    400,
     colors:        8,
     inverse:       false,
     orientation:   'mixed'
@@ -186,7 +187,7 @@ FaceWord = (function () {
     fontWidth  = fontMeasure[1];
     fontHeight = Math.ceil(fontSize * 0.8);
 
-    ctx.font         = fontSize + 'px ' + settings.fontFamily;
+    ctx.font         = _setFontProperty(fontSize, settings.fontWeight, settings.fontFamily);
     ctx.textBaseline = 'hanging';
     ctx.fillStyle    = 'rgb('+color+','+color+','+color+')';
     ctx.fillText(word, x, y, width);
@@ -212,7 +213,7 @@ FaceWord = (function () {
         textWidth,
         maxTextWidth;
 
-    ctx.font  = size + 'px serif';
+    ctx.font  = _setFontProperty(size, settings.fontWeight, settings.fontFamily);
     textWidth = ctx.measureText(word).width;
     wDiff     = maxWidth - textWidth;
 
@@ -224,7 +225,7 @@ FaceWord = (function () {
       maxTextWidth = textWidth;
 
       size += 1;
-      ctx.font = size + 'px serif';
+      ctx.font = _setFontProperty(size, settings.fontWeight, settings.fontFamily);
       textWidth = ctx.measureText(word).width;
       wDiff = maxWidth - textWidth;
     }
@@ -234,6 +235,10 @@ FaceWord = (function () {
   function _assignRenderedSize (block, width, height) {
     block.renderedWidth  = Math.ceil(width / settings.blockSize);
     block.renderedHeight = Math.ceil(height / settings.blockSize);
+  }
+
+  function _setFontProperty (fontSize, fontWeight, fontFamily) {
+    return fontWeight + ' ' + fontSize + 'px ' + fontFamily;
   }
 
   //////////////////
