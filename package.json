@@ -1,7 +1,7 @@
 {
   "name": "FaceWord",
   "description": "Convert photo into word cloud",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "author": {
     "name": "Rama Dimasatria",
     "url": "http://github.com/ramadimasatria"
