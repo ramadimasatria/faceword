@@ -123,10 +123,17 @@ FaceWord.ImageProcessor = (function (FaceWord) {
 
   function _generateValueMap () {
     var colors = settings.colors,
-        valueMap = [];
+        valueMap = [],
+        value;
 
     for (var i = colors; i >= 0; i--) {
-      valueMap[i] = Math.floor(255 * (i/colors));
+      value = Math.floor(255 * (i/colors));
+
+      if (settings.darkMode) {
+        value = _inverseValue(value);
+      }
+
+      valueMap.push(value);
     }
 
     return valueMap;
@@ -136,7 +143,7 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     var treshold,
         value;
 
-    treshold = Math.floor((valueMap[1] - valueMap[0]) / 2);
+    treshold = Math.floor((Math.abs(valueMap[1] - valueMap[0])) / 2);
 
     for (var i = 0; i < valueMap.length; i++) {
       if (Math.abs(pixelatedValue - valueMap[i]) < treshold) {

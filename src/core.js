@@ -11,6 +11,7 @@ FaceWord = (function () {
     fontWeight:    400,
     colors:        8,
     inverse:       false,
+    darkMode:      false,
     orientation:   'mixed'
   };
 
@@ -152,7 +153,9 @@ FaceWord = (function () {
 
     clearCanvas();
 
-    for (var i = 0; i < matrix.valueMap.length - 1; i++) {
+    _drawBackground(matrix.valueMap[0]);
+
+    for (var i = 1; i < matrix.valueMap.length; i++) {
       color = matrix.valueMap[i];
       weightedMatrix = FaceWord.BlockManager.weighMatrix(matrix.data, i);
       blockExist = true;
@@ -168,6 +171,12 @@ FaceWord = (function () {
         }
       }
     }
+  }
+
+  function _drawBackground (color) {
+    ctx.fillStyle = 'rgb('+color+','+color+','+color+')';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
   }
 
   function _renderBlock (block, color) {
