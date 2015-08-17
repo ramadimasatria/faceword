@@ -146,17 +146,19 @@ FaceWord = (function () {
         weightedMatrix,
         block,
         blockExist,
-        color;
+        color,
+        backgroundColor;
 
     imageData = FaceWord.ImageProcessor.process(image);
     matrix    = FaceWord.ImageProcessor.encode(imageData);
 
     clearCanvas();
 
-    _drawBackground(matrix.valueMap[0]);
+    backgroundColor = settings.backgroundColor ? settings.backgroundColor : _setColor(matrix.valueMap[0]);
+    _drawBackground(backgroundColor);
 
     for (var i = 1; i < matrix.valueMap.length; i++) {
-      color = matrix.valueMap[i];
+      color = _setColor(matrix.valueMap[i]);
       weightedMatrix = FaceWord.BlockManager.weighMatrix(matrix.data, i);
       blockExist = true;
 
@@ -174,7 +176,7 @@ FaceWord = (function () {
   }
 
   function _drawBackground (color) {
-    ctx.fillStyle = 'rgb('+color+','+color+','+color+')';
+    ctx.fillStyle = color;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.save();
   }
@@ -198,7 +200,7 @@ FaceWord = (function () {
 
     ctx.font         = _setFontProperty(fontSize, settings.fontWeight, settings.fontFamily);
     ctx.textBaseline = 'hanging';
-    ctx.fillStyle    = 'rgb('+color+','+color+','+color+')';
+    ctx.fillStyle    = color;
     ctx.fillText(word, x, y, width);
 
     ctx.restore();
@@ -248,6 +250,10 @@ FaceWord = (function () {
 
   function _setFontProperty (fontSize, fontWeight, fontFamily) {
     return fontWeight + ' ' + fontSize + 'px ' + fontFamily;
+  }
+
+  function _setColor (brightness) {
+    return 'rgb('+brightness+', '+brightness+','+brightness+')';
   }
 
   //////////////////
