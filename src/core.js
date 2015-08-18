@@ -12,6 +12,8 @@ FaceWord = (function () {
     colors:        8,
     inverse:       false,
     darkMode:      false,
+
+    // Future settings
     orientation:   'mixed'
   };
 
