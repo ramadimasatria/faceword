@@ -1,4 +1,4 @@
-/*! FaceWord - v0.0.4 - 2015-08-16
+/*! FaceWord - v0.0.5 - 2015-08-18
 * Copyright (c) 2015 Rama Dimasatria; Licensed  */
 FaceWord = (function () {
   'use strict';
@@ -13,6 +13,9 @@ FaceWord = (function () {
     fontWeight:    400,
     colors:        8,
     inverse:       false,
+    darkMode:      false,
+
+    // Future settings
     orientation:   'mixed'
   };
 
@@ -147,15 +150,19 @@ FaceWord = (function () {
         weightedMatrix,
         block,
         blockExist,
-        color;
+        color,
+        backgroundColor;
 
     imageData = FaceWord.ImageProcessor.process(image);
     matrix    = FaceWord.ImageProcessor.encode(imageData);
 
     clearCanvas();
 
-    for (var i = 0; i < matrix.valueMap.length - 1; i++) {
-      color = matrix.valueMap[i];
+    backgroundColor = settings.backgroundColor ? settings.backgroundColor : _setColor(matrix.valueMap[0]);
+    _drawBackground(backgroundColor);
+
+    for (var i = 1; i < matrix.valueMap.length; i++) {
+      color = _setColor(matrix.valueMap[i]);
       weightedMatrix = FaceWord.BlockManager.weighMatrix(matrix.data, i);
       blockExist = true;
 
@@ -170,6 +177,12 @@ FaceWord = (function () {
         }
       }
     }
+  }
+
+  function _drawBackground (color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
   }
 
   function _renderBlock (block, color) {
@@ -191,7 +204,7 @@ FaceWord = (function () {
 
     ctx.font         = _setFontProperty(fontSize, settings.fontWeight, settings.fontFamily);
     ctx.textBaseline = 'hanging';
-    ctx.fillStyle    = 'rgb('+color+','+color+','+color+')';
+    ctx.fillStyle    = color;
     ctx.fillText(word, x, y, width);
 
     ctx.restore();
@@ -241,6 +254,10 @@ FaceWord = (function () {
 
   function _setFontProperty (fontSize, fontWeight, fontFamily) {
     return fontWeight + ' ' + fontSize + 'px ' + fontFamily;
+  }
+
+  function _setColor (brightness) {
+    return 'rgb('+brightness+', '+brightness+','+brightness+')';
   }
 
   //////////////////
@@ -554,10 +571,17 @@ FaceWord.ImageProcessor = (function (FaceWord) {
 
   function _generateValueMap () {
     var colors = settings.colors,
-        valueMap = [];
+        valueMap = [],
+        value;
 
     for (var i = colors; i >= 0; i--) {
-      valueMap[i] = Math.floor(255 * (i/colors));
+      value = Math.floor(255 * (i/colors));
+
+      if (settings.darkMode) {
+        value = _inverseValue(value);
+      }
+
+      valueMap.push(value);
     }
 
     return valueMap;
@@ -567,7 +591,7 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     var treshold,
         value;
 
-    treshold = Math.floor((valueMap[1] - valueMap[0]) / 2);
+    treshold = Math.floor((Math.abs(valueMap[1] - valueMap[0])) / 2);
 
     for (var i = 0; i < valueMap.length; i++) {
       if (Math.abs(pixelatedValue - valueMap[i]) < treshold) {
