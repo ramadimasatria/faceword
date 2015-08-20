@@ -122,17 +122,15 @@ FaceWord.ImageProcessor = (function (FaceWord) {
   }
 
   function _generateValueMap () {
-    var colors = settings.colors,
+    var colorSet = settings.colorSet,
         valueMap = [],
-        value;
+        r, g, b, value;
 
-    for (var i = colors; i >= 0; i--) {
-      value = Math.floor(255 * (i/colors));
-
-      if (settings.darkMode) {
-        value = _inverseValue(value);
-      }
-
+    for (var i = 0; i < colorSet.length; i++) {
+      r = colorSet[i][0];
+      g = colorSet[i][1];
+      b = colorSet[i][2];
+      value = Math.floor((r + g + b) / 3);
       valueMap.push(value);
     }
 
@@ -140,15 +138,15 @@ FaceWord.ImageProcessor = (function (FaceWord) {
   }
 
   function _getClosestValue (pixelatedValue, valueMap) {
-    var treshold,
+    var minDistance = 99999,
+        distance,
         value;
 
-    treshold = Math.floor((Math.abs(valueMap[1] - valueMap[0])) / 2);
-
     for (var i = 0; i < valueMap.length; i++) {
-      if (Math.abs(pixelatedValue - valueMap[i]) < treshold) {
+      distance = Math.abs(pixelatedValue - valueMap[i]);
+      if (distance < minDistance) {
+        minDistance = distance;
         value = valueMap[i];
-        break;
       }
     }
 

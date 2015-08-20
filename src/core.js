@@ -2,16 +2,15 @@ FaceWord = (function () {
   'use strict';
 
   var settings = {
-    contrast:      0,
-    blockSize:     5,
-    minFontSize:   2,
-    maxFontSize:   48,
-    imgMaxWidth:   600,
-    fontFamily:    'serif',
-    fontWeight:    400,
-    colors:        8,
-    inverse:       false,
-    darkMode:      false,
+    contrast:        0,
+    blockSize:       5,
+    minFontSize:     2,
+    maxFontSize:     48,
+    imgMaxWidth:     600,
+    fontFamily:      'serif',
+    fontWeight:      400,
+    colorSet:        [[255, 255, 255], [0, 0, 0]],
+    inverse:         false,
 
     // Future settings
     orientation:   'mixed'
@@ -156,11 +155,10 @@ FaceWord = (function () {
 
     clearCanvas();
 
-    backgroundColor = settings.backgroundColor ? settings.backgroundColor : _setColor(matrix.valueMap[0]);
-    _drawBackground(backgroundColor);
+    _drawBackground(_setColorString(settings.colorSet[0]));
 
     for (var i = 1; i < matrix.valueMap.length; i++) {
-      color = _setColor(matrix.valueMap[i]);
+      color = _setColorString(settings.colorSet[i]);
       weightedMatrix = FaceWord.BlockManager.weighMatrix(matrix.data, i);
       blockExist = true;
 
@@ -254,8 +252,12 @@ FaceWord = (function () {
     return fontWeight + ' ' + fontSize + 'px ' + fontFamily;
   }
 
-  function _setColor (brightness) {
-    return 'rgb('+brightness+', '+brightness+','+brightness+')';
+  function _setColorString (color) {
+    var r = color[0],
+        g = color[1],
+        b = color[2];
+
+    return 'rgb('+r+', '+g+','+b+')';
   }
 
   //////////////////
