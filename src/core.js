@@ -244,8 +244,8 @@ FaceWord = (function () {
   }
 
   function _assignRenderedSize (block, width, height) {
-    block.renderedWidth  = Math.ceil(width / settings.blockSize);
-    block.renderedHeight = Math.ceil(height / settings.blockSize);
+    block.renderedWidth  = Math.max(Math.ceil(width / settings.blockSize), 1);
+    block.renderedHeight = Math.max(Math.ceil(height / settings.blockSize), 1);
   }
 
   function _setFontProperty (fontSize, fontWeight, fontFamily) {
