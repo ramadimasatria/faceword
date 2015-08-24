@@ -1,6 +1,9 @@
 FaceWord.BlockManager = (function (FaceWord) {
   var settings;
 
+  var cellIndex = 0,
+      sortedCells = [];
+
   function init () {
     settings = FaceWord.getSettings();
   }
@@ -140,28 +143,58 @@ FaceWord.BlockManager = (function (FaceWord) {
   ////////////////////// Private Functions
 
   function _getMaxWeightedCell (weightedMatrix) {
-    var maxWeight = 0,
-        cell = {},
-        weight;
+    var cell,
+        observedCell;
 
+    if (cellIndex === sortedCells.length) {
+      cellIndex = 0;
+      _sortCells(weightedMatrix);
+
+      if (sortedCells.length === 0) {
+        return false;
+      }
+    }
+
+    for (cellIndex; cellIndex < sortedCells.length; cellIndex++) {
+      cell = sortedCells[cellIndex];
+      observedCell = weightedMatrix[cell.y][cell.x];
+
+      if (cell.colWeight === observedCell[0] && cell.rowWeight === observedCell[1]) {
+        cellIndex++;
+        break;
+      }
+    }
+
+    return cell;
+  }
+
+  function _sortCells (weightedMatrix) {
+    var cell;
+
+    sortedCells = [];
+
+    // Clone weighted matrix
     for (var y = 0; y < weightedMatrix.length; y++) {
       for (var x = 0; x < weightedMatrix[y].length; x++) {
-        weight = weightedMatrix[y][x][0] * weightedMatrix[y][x][1];
-        if (weight > maxWeight) {
-          maxWeight = weight;
-          cell = {
-            x: x,
-            y: y,
-            colWeight: weightedMatrix[y][x][0],
-            rowWeight: weightedMatrix[y][x][1],
-          };
+        cell = {
+          x: x,
+          y: y,
+          colWeight: weightedMatrix[y][x][0],
+          rowWeight: weightedMatrix[y][x][1],
+        };
+
+        if (cell.colWeight && cell.rowWeight) {
+          sortedCells.push(cell);
         }
       }
     }
 
-    if (maxWeight === 0) {return false;}
+    sortedCells.sort(function (a, b) {
+      var weightA = a.colWeight * a.rowWeight,
+          weightB = b.colWeight * b.rowWeight;
 
-    return cell;
+      return weightB - weightA;
+    });
   }
   //////////////////////
 
