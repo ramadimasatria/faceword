@@ -25,13 +25,10 @@ FaceWord.ImageProcessor = (function (FaceWord) {
       g = data[i+1];
       b = data[i+2];
 
-      value = (r + g + b) / 3;                                    // convert to grayscale
-      value = _truncateValue((contrastFactor*(value-128))+128);    // add contrast
-
-      // change original image
-      data[i]   = value;
-      data[i+1] = value;
-      data[i+2] = value;
+      // Add contrast
+      data[i]   = _truncateValue((contrastFactor*(r-128))+128);
+      data[i+1] = _truncateValue((contrastFactor*(g-128))+128);
+      data[i+2] = _truncateValue((contrastFactor*(b-128))+128);
     }
 
     return imageData;
@@ -63,11 +60,9 @@ FaceWord.ImageProcessor = (function (FaceWord) {
         }
 
         value = _getPixelatedValue(data, x0, y0, x1, y1);
-        value = _getClosestValue(value, valueMap);
+        closestValue = _getClosestValue(value, valueMap);
 
-        valueIndex = valueMap.indexOf(value);
-
-        matrixData[row][column] = valueIndex;
+        matrixData[row][column] = closestValue[0];
       }
     }
 
@@ -90,21 +85,39 @@ FaceWord.ImageProcessor = (function (FaceWord) {
   }
 
   function _getPixelatedValue (data, x0, y0, x1, y1) {
-    var sum = 0,
+    var sumR = 0,
+        sumG = 0,
+        sumB = 0,
         count = 0,
-        brightness,
+        pixelIndex, r, g, b,
         value;
 
     for (var j = y0; j < y1; j++) {
       for (var i = x0; i < x1; i++) {
-        brightness = data[((image.width * j) + i) * 4];
-        sum += brightness;
+        pixelIndex = ((image.width * j) + i) * 4;
+
+        r = data[pixelIndex];
+        g = data[pixelIndex+1];
+        b = data[pixelIndex+2];
+
+        sumR += r;
+        sumG += g;
+        sumB += b;
+
         count++;
       }
     }
-    value = Math.floor(sum/count);
+
+    value = [
+      [Math.floor(sumR/count)],
+      [Math.floor(sumG/count)],
+      [Math.floor(sumB/count)]
+    ];
+
     if (settings.inverse) {
-      value = _inverseValue(value);
+      value[0] = _inverseValue(value[0]);
+      value[1] = _inverseValue(value[1]);
+      value[2] = _inverseValue(value[2]);
     }
 
     return value;
@@ -121,35 +134,30 @@ FaceWord.ImageProcessor = (function (FaceWord) {
   }
 
   function _generateValueMap () {
-    var colorSet = settings.colorSet,
-        valueMap = [],
-        r, g, b, value;
+    // TODO: validate colors
 
-    for (var i = 0; i < colorSet.length; i++) {
-      r = colorSet[i][0];
-      g = colorSet[i][1];
-      b = colorSet[i][2];
-      value = Math.floor((r + g + b) / 3);
-      valueMap.push(value);
-    }
-
-    return valueMap;
+    return settings.colorSet;
   }
 
   function _getClosestValue (pixelatedValue, valueMap) {
     var minDistance = 99999,
         distance,
-        value;
+        observedValue,
+        value, valueIndex;
 
     for (var i = 0; i < valueMap.length; i++) {
-      distance = Math.abs(pixelatedValue - valueMap[i]);
+      // Get euclidean distance
+      observedValue = valueMap[i];
+      distance = Math.sqrt(Math.pow(pixelatedValue[0] - observedValue[0], 2) + Math.pow(pixelatedValue[1] - observedValue[1], 2) + Math.pow(pixelatedValue[2] - observedValue[2], 2));
+
       if (distance < minDistance) {
         minDistance = distance;
-        value = valueMap[i];
+        value = observedValue;
+        valueIndex = i;
       }
     }
 
-    return value;
+    return [valueIndex, value];
   }
 
   /////////////////
