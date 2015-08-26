@@ -150,8 +150,7 @@ FaceWord = (function () {
         color,
         backgroundColor;
 
-    imageData = FaceWord.ImageProcessor.process(image);
-    matrix    = FaceWord.ImageProcessor.encode(imageData);
+    matrix  = FaceWord.ImageProcessor.encode(image);
 
     clearCanvas();
 

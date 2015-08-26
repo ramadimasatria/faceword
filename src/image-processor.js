@@ -9,45 +9,24 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     settings = FaceWord.getSettings();
   }
 
-  function process (img) {
-    var contrastRatio = settings.contrast,
-        contrastFactor = (259 * (contrastRatio + 255)) / (255 * (259 - contrastRatio)),
-        imageData,
-        data, r, g, b, value;
+  function encode (img) {
+    var blockSize = settings.blockSize,
+        matrixData = [],
+        imageData, data,
+        x0, y0, x1, y1,
+        value, valueMap, closestValue;
 
     _prepareImage(img);
 
     imageData = ctx.getImageData(0, 0, image.width, image.height);
     data = imageData.data;
 
-    for (var i = 0; i < data.length; i+=4) {
-      r = data[i];
-      g = data[i+1];
-      b = data[i+2];
-
-      // Add contrast
-      data[i]   = _truncateValue((contrastFactor*(r-128))+128);
-      data[i+1] = _truncateValue((contrastFactor*(g-128))+128);
-      data[i+2] = _truncateValue((contrastFactor*(b-128))+128);
-    }
-
-    return imageData;
-  }
-
-  function encode (imageData) {
-    var data  = imageData.data,
-        matrixData = [],
-        blockSize = settings.blockSize,
-        x0, y0, x1, y1,
-        matrix, row, column,
-        value, valueIndex, valueMap;
-
     valueMap = _generateValueMap();
 
     for (y0 = 0; y0 < image.height; y0+=blockSize) {
-      row            = y0 / blockSize;
+      row             = y0 / blockSize;
       matrixData[row] = [];
-      y1             = y0 + blockSize - 1;
+      y1              = y0 + blockSize - 1;
       if (y1 > image.height){
         y1 = image.height -1;
       }
@@ -59,7 +38,7 @@ FaceWord.ImageProcessor = (function (FaceWord) {
           x1 = image.width -1;
         }
 
-        value = _getPixelatedValue(data, x0, y0, x1, y1);
+        value        = _getPixelatedValue(data, x0, y0, x1, y1);
         closestValue = _getClosestValue(value, valueMap);
 
         matrixData[row][column] = closestValue[0];
@@ -89,20 +68,19 @@ FaceWord.ImageProcessor = (function (FaceWord) {
         sumG = 0,
         sumB = 0,
         count = 0,
-        pixelIndex, r, g, b,
+        pixel, pixelIndex,
         value;
 
     for (var j = y0; j < y1; j++) {
       for (var i = x0; i < x1; i++) {
         pixelIndex = ((image.width * j) + i) * 4;
 
-        r = data[pixelIndex];
-        g = data[pixelIndex+1];
-        b = data[pixelIndex+2];
+        pixel = [data[pixelIndex], data[pixelIndex+1], data[pixelIndex+2]];
+        pixel = _processPixel(pixel);
 
-        sumR += r;
-        sumG += g;
-        sumB += b;
+        sumR += pixel[0];
+        sumG += pixel[1];
+        sumB += pixel[2];
 
         count++;
       }
@@ -121,6 +99,21 @@ FaceWord.ImageProcessor = (function (FaceWord) {
     }
 
     return value;
+  }
+
+  function _processPixel (pixel) {
+    var contrastRatio = settings.contrast,
+        contrastFactor;
+
+    if (contrastRatio !== 0) {
+      contrastFactor = (259 * (contrastRatio + 255)) / (255 * (259 - contrastRatio));
+
+      pixel[0] = _truncateValue((contrastFactor*(pixel[0]-128))+128);
+      pixel[1] = _truncateValue((contrastFactor*(pixel[1]-128))+128);
+      pixel[2] = _truncateValue((contrastFactor*(pixel[2]-128))+128);
+    }
+
+    return pixel;
   }
 
   function _truncateValue (val) {
@@ -164,7 +157,6 @@ FaceWord.ImageProcessor = (function (FaceWord) {
 
   return {
     init:    init,
-    process: process,
     encode:  encode
   };
 })(FaceWord || {});
