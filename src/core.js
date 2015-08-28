@@ -1,20 +1,19 @@
 FaceWord = (function () {
   'use strict';
 
-  var settings = {
-    contrast:        0,
-    blockSize:       5,
-    minFontSize:     2,
-    maxFontSize:     48,
-    imgMaxWidth:     600,
-    fontFamily:      'serif',
-    fontWeight:      400,
-    colorSet:        [[255, 255, 255], [0, 0, 0]],
-    inverse:         false,
-
-    // Future settings
-    orientation:   'mixed'
-  };
+  var settings = {},
+      defaultSettings = {
+        contrast:        0,
+        blockSize:       5,
+        minFontSize:     2,
+        maxFontSize:     48,
+        imgMaxWidth:     600,
+        fontFamily:      'serif',
+        fontWeight:      400,
+        colorSet:        [[255, 255, 255], [0, 0, 0]],
+        inverse:         false,
+        orientation:     'mixed'
+      };
 
   var image,
       canvas,
@@ -78,6 +77,8 @@ FaceWord = (function () {
   ////////////////// Private Functions
 
   function _init (i, t, c, s) {
+    _setDefaultSettings();
+
     for(var prop in s) {
       if(s.hasOwnProperty(prop)){
         settings[prop] = s[prop];
@@ -93,6 +94,14 @@ FaceWord = (function () {
     FaceWord.ImageProcessor.init();
     FaceWord.BlockManager.init();
     FaceWord.WordManager.init(t);
+  }
+
+  function _setDefaultSettings () {
+    for(var prop in defaultSettings) {
+      if(defaultSettings.hasOwnProperty(prop)){
+        settings[prop] = defaultSettings[prop];
+      }
+    }
   }
 
   function _isImage (node) {
@@ -188,8 +197,14 @@ FaceWord = (function () {
         y           = restoredBlock.y,
         width       = restoredBlock.width,
         height      = restoredBlock.height,
-        fontMeasure = _measureFont(word, width, height),
-        fontSize, fontWidth, fontHeight;
+        orientation = _getOrientation(block),
+        fontMeasure, fontSize, fontWidth, fontHeight;
+
+    if (orientation === 'vertical') {
+      fontMeasure = _measureFont(word, height, width);
+    } else {
+      fontMeasure = _measureFont(word, width, height);
+    }
 
     if (!fontMeasure) {return;}
 
@@ -198,13 +213,24 @@ FaceWord = (function () {
     fontHeight = Math.ceil(fontSize * 0.8);
 
     ctx.font         = _setFontProperty(fontSize, settings.fontWeight, settings.fontFamily);
-    ctx.textBaseline = 'hanging';
     ctx.fillStyle    = color;
-    ctx.fillText(word, x, y, width);
+    ctx.textBaseline = 'hanging';
 
-    ctx.restore();
+    if (orientation === 'vertical') {
+      ctx.save();
 
-    _assignRenderedSize(block, fontWidth, fontHeight);
+      ctx.rotate(-Math.PI / 2 );
+      ctx.textAlign = 'right';
+      ctx.fillText(word, -y, x, height);
+
+      ctx.restore();
+
+      _assignRenderedSize(block, fontHeight, fontWidth);
+    } else {
+      ctx.fillText(word, x, y, width);
+      
+      _assignRenderedSize(block, fontWidth, fontHeight);
+    }
   }
 
   function _restoreBlockSize (block) {
@@ -257,6 +283,23 @@ FaceWord = (function () {
         b = color[2];
 
     return 'rgb('+r+', '+g+','+b+')';
+  }
+
+  function _getOrientation (block) {
+    switch(settings.orientation){
+      case 'vertical':
+        return 'vertical';
+
+      case 'horizontal':
+        return 'horizontal';
+
+      default:
+        if (block.width >= block.height) {
+          return 'horizontal';
+        } else {
+          return 'vertical';
+        }
+    }
   }
 
   //////////////////
